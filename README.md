@@ -1,2 +1,1607 @@
 # f1
 f1 model
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mercedes-AMG W14 互動式遙測與空力實驗室</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+  <style>
+    body { margin: 0; overflow: hidden; background: #080b10; color: #e2e8f0; font-family: 'Segoe UI', 'Microsoft JhengHei', 'JetBrains Mono', monospace, sans-serif; user-select: none; }
+    #canvas-container { width: 100vw; height: 100vh; position: relative; z-index: 1; }
+    .glass-panel { background: rgba(13, 18, 28, 0.88); backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 12px 32px rgba(0,0,0,0.55); }
+    .callout-label { position: absolute; pointer-events: none; transform: translate(-50%, -100%); transition: opacity 0.15s ease; z-index: 20; }
+    .callout-line { width: 2px; height: 34px; background: linear-gradient(to bottom, #00f5d4, rgba(0,245,212,0.1)); margin: 0 auto; }
+    .callout-dot { width: 8px; height: 8px; border-radius: 50%; background: #00f5d4; box-shadow: 0 0 10px #00f5d4; margin: 0 auto; }
+    .active-btn { background: #00a896 !important; color: #ffffff !important; border-color: #00f5d4 !important; box-shadow: 0 0 14px rgba(0, 245, 212, 0.45); }
+    input[type=range] { accent-color: #00f5d4; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+<div id="canvas-container"></div>
+
+<!-- 載入進度覆蓋層 -->
+<div id="loading-overlay" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden flex-col items-center justify-center">
+  <div class="w-12 h-12 border-4 border-teal-400 border-t-transparent rounded-full animate-spin mb-4"></div>
+  <div id="loading-title" class="text-lg font-bold text-white tracking-wider mb-2">正在解碼 AMG W14 原生模型與材質...</div>
+  <div class="w-72 bg-slate-800 h-2.5 rounded-full overflow-hidden border border-slate-700">
+    <div id="loading-bar" class="bg-teal-400 h-full w-0 transition-all duration-150"></div>
+  </div>
+  <div id="loading-percent" class="text-xs font-mono text-teal-300 mt-2">0%</div>
+</div>
+
+<!-- 頂部狀態與 GLB 檔案直讀列 -->
+<div class="fixed top-4 left-4 right-4 flex justify-between items-center pointer-events-none z-30">
+  <div class="glass-panel px-4 py-2.5 rounded-lg pointer-events-auto flex items-center gap-4">
+    <div id="status-dot" class="w-3 h-3 rounded-full bg-teal-400 animate-ping"></div>
+    <div>
+      <div class="text-[10px] text-teal-400 font-bold tracking-widest">MERCEDES-AMG W14 TELEMETRY & AERO LAB</div>
+      <div id="model-status" class="text-xs font-bold tracking-wider text-slate-200">目前顯示：代理車體 (請點擊右側按鈕載入你的 W14 .glb)</div>
+    </div>
+    <label class="cursor-pointer bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs px-3.5 py-2 rounded transition shadow-lg flex items-center gap-1.5">
+      <span>📂 載入你的 AMG W14 (.glb)</span>
+      <input id="glb-file-input" type="file" accept=".glb,.gltf" class="hidden" />
+    </label>
+  </div>
+
+  <!-- 日夜環境光源切換快捷列 -->
+  <div class="glass-panel px-3 py-2 rounded-lg text-xs text-slate-200 flex gap-2 pointer-events-auto items-center">
+    <span class="text-slate-400 font-semibold mr-1">車色與光源：</span>
+    <button id="btn-env-day" class="active-btn border border-slate-600 bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded font-bold transition">
+      ☀️ 白天 (100% 原檔車色)
+    </button>
+    <button id="btn-env-night" class="border border-slate-600 bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded font-bold transition">
+      🌙 夜間 (原檔壓暗氛圍)
+    </button>
+  </div>
+</div>
+
+<!-- 左側控制面板 -->
+<div class="fixed left-4 top-20 flex flex-col gap-2.5 w-64 z-30">
+  <!-- 視角切換 -->
+  <div class="glass-panel p-3 rounded-lg">
+    <div class="text-[11px] text-slate-400 uppercase tracking-wider mb-2 font-semibold">1. 鏡頭視角 (Camera)</div>
+    <div class="grid grid-cols-2 gap-1.5">
+      <button id="btn-cam-orbit" class="active-btn border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-xs py-2 rounded font-medium transition">360° 環繞</button>
+      <button id="btn-cam-cockpit" class="border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-xs py-2 rounded font-medium transition">座艙方向盤</button>
+      <button id="btn-cam-front" class="border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-xs py-1.5 rounded text-slate-300 transition">前輪/配方特寫</button>
+      <button id="btn-cam-rear" class="border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-xs py-1.5 rounded text-slate-300 transition">尾翼 DRS 特寫</button>
+    </div>
+    <button id="btn-flip-lcd" class="mt-2 w-full border border-slate-700 bg-slate-900/90 hover:bg-slate-800 text-[11px] py-1 rounded text-teal-300 transition">
+      🔄 切換螢幕翻轉模式 (預設已翻正)
+    </button>
+  </div>
+
+  <!-- 工程展示模式 -->
+  <div class="glass-panel p-3 rounded-lg">
+    <div class="text-[11px] text-slate-400 uppercase tracking-wider mb-2 font-semibold">2. 工程測試 (Engineering)</div>
+    <div class="flex flex-col gap-1.5">
+      <button id="btn-explode" class="border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-xs py-2 px-3 rounded flex justify-between items-center transition">
+        <span>🔧 結構爆炸圖 + 標籤</span>
+        <span id="state-explode" class="text-[10px] font-bold text-slate-400">關閉</span>
+      </button>
+      <button id="btn-aero" class="border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-xs py-2 px-3 rounded flex justify-between items-center transition">
+        <span>💨 風洞氣流模擬 (CFD)</span>
+        <span id="state-aero" class="text-[10px] font-bold text-slate-400">關閉</span>
+      </button>
+      <button id="btn-drs" class="border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-xs py-2 px-3 rounded flex justify-between items-center transition">
+        <span>🪽 DRS 可動尾翼開合</span>
+        <span id="state-drs" class="text-[10px] font-bold text-slate-400">關閉</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 輪胎配方與塗裝微調 -->
+  <div class="glass-panel p-3 rounded-lg">
+    <div class="flex justify-between items-center mb-1.5">
+      <span class="text-[11px] text-slate-400 uppercase tracking-wider font-semibold">3. 倍耐力輪胎配方</span>
+      <span id="tire-spec-hint" class="text-[10px] text-red-400 font-mono font-bold">極速 368 / 抓地 125%</span>
+    </div>
+    <div class="grid grid-cols-3 gap-1.5 mb-2.5">
+      <button data-compound="SOFT" class="tire-btn active-btn border border-red-500/60 bg-slate-800 text-[11px] py-1.5 rounded font-bold text-red-300">軟胎 紅</button>
+      <button data-compound="MEDIUM" class="tire-btn border border-yellow-500/60 bg-slate-800 text-[11px] py-1.5 rounded font-bold text-yellow-300">中性 黃</button>
+      <button data-compound="HARD" class="tire-btn border border-slate-300/60 bg-slate-800 text-[11px] py-1.5 rounded font-bold text-slate-100">硬胎 白</button>
+    </div>
+
+    <div class="text-[11px] text-slate-400 uppercase tracking-wider mb-1.5 font-semibold">車體烤漆切換 (可還原原檔)</div>
+    <div class="flex gap-2 items-center">
+      <button data-orig="true" class="paint-btn px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-[10px] font-bold border border-teal-400 text-white" title="還原 GLB 原始塗裝">原檔色</button>
+      <button data-color="0xdc2626" class="paint-btn w-6 h-6 rounded-full bg-red-600 border border-slate-400 hover:scale-110 transition" title="法拉利紅"></button>
+      <button data-color="0x00f5d4" class="paint-btn w-6 h-6 rounded-full bg-teal-400 border border-slate-400 hover:scale-110 transition" title="馬石油綠"></button>
+      <button data-color="0xf97316" class="paint-btn w-6 h-6 rounded-full bg-orange-500 border border-slate-400 hover:scale-110 transition" title="木瓜橘"></button>
+      <button data-color="0xe2e8f0" class="paint-btn w-6 h-6 rounded-full bg-slate-200 border border-slate-400 hover:scale-110 transition" title="銀箭銀"></button>
+    </div>
+  </div>
+
+  <!-- 擬真聲浪引擎開關 -->
+  <div class="glass-panel p-3 rounded-lg">
+    <button id="btn-audio" class="w-full border border-teal-500/80 bg-teal-950/80 hover:bg-teal-800 text-teal-200 text-xs py-2.5 rounded font-bold tracking-wider transition">
+      🔊 啟動 V6 擬真諧波聲浪
+    </button>
+  </div>
+</div>
+
+<!-- 底部中央：滑鼠直接互動駕駛台 -->
+<div class="fixed bottom-4 left-1/2 -translate-x-1/2 glass-panel px-5 py-3 rounded-xl z-30 flex items-center gap-6">
+  <div class="flex flex-col w-36">
+    <div class="flex justify-between text-[11px] mb-1">
+      <span class="text-teal-400 font-bold">油門踏板</span>
+      <span id="ui-throttle-val" class="font-mono text-xs">0%</span>
+    </div>
+    <input id="slider-throttle" type="range" min="0" max="100" value="0" class="w-full h-2 bg-slate-700 rounded-lg" />
+    <span class="text-[10px] text-slate-400 mt-1">可拖拉定速或按 [W]</span>
+  </div>
+
+  <div class="flex flex-col w-36">
+    <div class="flex justify-between text-[11px] mb-1">
+      <span class="text-sky-400 font-bold">方向盤轉向 (Z軸)</span>
+      <span id="ui-steer-val" class="font-mono text-xs">0°</span>
+    </div>
+    <input id="slider-steer" type="range" min="-100" max="100" value="0" class="w-full h-2 bg-slate-700 rounded-lg" />
+    <span class="text-[10px] text-slate-400 mt-1">拖拉轉動方向盤或 [A/D]</span>
+  </div>
+
+  <div class="flex items-center gap-2">
+    <button id="btn-gear-down" class="border border-slate-600 bg-slate-800 hover:bg-slate-700 active:bg-teal-600 px-3 py-2 rounded text-xs font-bold transition">
+      降檔 [Q]
+    </button>
+    <button id="btn-gear-up" class="border border-slate-600 bg-slate-800 hover:bg-slate-700 active:bg-teal-600 px-3 py-2 rounded text-xs font-bold transition">
+      升檔 [E]
+    </button>
+    <button id="btn-brake-hold" class="border border-rose-600/80 bg-rose-950/80 hover:bg-rose-800 active:bg-rose-600 px-3.5 py-2 rounded text-xs font-bold text-rose-200 transition">
+      🛑 重煞車 [S]
+    </button>
+  </div>
+</div>
+
+<!-- 右下角：全繁體中文「車隊維修區牆遙測數據 (PIT WALL)」 -->
+<div id="external-hud" class="fixed right-4 bottom-4 glass-panel p-4 rounded-xl w-80 z-30 transition-opacity duration-300">
+  <div class="flex justify-between items-center mb-2">
+    <span class="text-[11px] text-slate-300 tracking-wider font-bold">車隊維修區牆遙測數據</span>
+    <div class="flex gap-1.5">
+      <span id="hud-compound-badge" class="text-[10px] px-1.5 py-0.5 rounded bg-red-600 text-white font-bold">軟胎 C3</span>
+      <span id="hud-drs-badge" class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-bold">DRS 關閉</span>
+    </div>
+  </div>
+
+  <!-- 15 顆超轉燈 -->
+  <div id="hud-leds" class="grid gap-1 mb-2.5 h-2.5" style="grid-template-columns: repeat(15, minmax(0, 1fr));"></div>
+
+  <!-- 時速、下壓力與檔位 -->
+  <div class="flex items-baseline justify-between border-b border-slate-800 pb-2 mb-2.5">
+    <div>
+      <div class="text-[10px] text-slate-400">時速 (極速 <span id="hud-max-speed">368</span> km/h)</div>
+      <div class="text-3xl font-black tracking-tight"><span id="hud-speed">0</span> <span class="text-xs font-normal text-slate-400">km/h</span></div>
+    </div>
+    <div class="text-center">
+      <div class="text-[10px] text-slate-400">空氣動力下壓力</div>
+      <div class="text-sm font-bold text-sky-400 font-mono"><span id="hud-downforce">0</span> kg</div>
+    </div>
+    <div class="text-right">
+      <div class="text-[10px] text-slate-400">檔位</div>
+      <div id="hud-gear" class="text-4xl font-black text-teal-400">N</div>
+    </div>
+  </div>
+
+  <!-- 四輪表面溫度與動態胎壓卡片 -->
+  <div class="bg-slate-900/90 border border-slate-800 rounded-lg p-2.5 mb-2.5">
+    <div class="flex justify-between items-center text-[10px] mb-1.5">
+      <span class="text-slate-300 font-semibold">輪胎表面溫度與動態胎壓</span>
+      <span id="hud-grip-text" class="text-emerald-400 font-mono font-bold">輪胎抓地力：125%</span>
+    </div>
+    <div class="grid grid-cols-2 gap-1.5 text-[11px] font-mono">
+      <div id="tire-box-fl" class="bg-slate-800/80 px-2 py-1 rounded border-l-4 border-emerald-500 flex justify-between items-center">
+        <span class="text-slate-400 text-[10px]">左前</span>
+        <span id="temp-fl" class="font-bold">90°C</span>
+        <span id="psi-fl" class="text-[10px] text-slate-400">22.2p</span>
+      </div>
+      <div id="tire-box-fr" class="bg-slate-800/80 px-2 py-1 rounded border-r-4 border-emerald-500 flex justify-between items-center">
+        <span class="text-slate-400 text-[10px]">右前</span>
+        <span id="temp-fr" class="font-bold">90°C</span>
+        <span id="psi-fr" class="text-[10px] text-slate-400">22.2p</span>
+      </div>
+      <div id="tire-box-rl" class="bg-slate-800/80 px-2 py-1 rounded border-l-4 border-emerald-500 flex justify-between items-center">
+        <span class="text-slate-400 text-[10px]">左後</span>
+        <span id="temp-rl" class="font-bold">95°C</span>
+        <span id="psi-rl" class="text-[10px] text-slate-400">20.4p</span>
+      </div>
+      <div id="tire-box-rr" class="bg-slate-800/80 px-2 py-1 rounded border-r-4 border-emerald-500 flex justify-between items-center">
+        <span class="text-slate-400 text-[10px]">右後</span>
+        <span id="temp-rr" class="font-bold">95°C</span>
+        <span id="psi-rr" class="text-[10px] text-slate-400">20.4p</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 轉速、底盤高度與煞車/電池狀態 -->
+  <div class="space-y-1 text-[11px]">
+    <div class="flex justify-between">
+      <span class="text-slate-400">引擎轉速 / 底盤行駛高度</span>
+      <span class="font-mono"><b id="hud-rpm">4,000</b> rpm | <b id="hud-ride-height" class="text-teal-300">32</b> mm</span>
+    </div>
+    <div class="w-full bg-slate-800 h-1.5 rounded overflow-hidden">
+      <div id="bar-rpm" class="bg-teal-400 h-full w-1/4 transition-all duration-75"></div>
+    </div>
+
+    <div class="flex justify-between pt-1">
+      <span class="text-slate-400">碳陶煞車碟盤溫度</span>
+      <span id="hud-brake-temp" class="font-mono text-amber-400">280 °C</span>
+    </div>
+
+    <div class="flex justify-between pt-0.5">
+      <span class="text-slate-400">ERS 電池電量 (動能回收)</span>
+      <span id="hud-ers" class="font-mono text-cyan-300">100%</span>
+    </div>
+    <div class="w-full bg-slate-800 h-1.5 rounded overflow-hidden">
+      <div id="bar-ers" class="bg-cyan-400 h-full w-full"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 3D 空間爆炸標籤容器 -->
+<div id="callouts-container" class="fixed inset-0 pointer-events-none z-20"></div>
+
+<script>
+// ==========================================
+// 1. 輪胎配方物理參數表與全域狀態機
+// ==========================================
+const TIRE_COMPOUNDS = {
+  SOFT: {
+    name: '軟胎 C3',
+    engName: 'SOFT C3',
+    colorHex: 0xff1801,
+    cssColor: '#ff1801',
+    badgeClass: 'bg-red-600 text-white',
+    gripFactor: 1.25,      // 起步與出彎加速度 +25%
+    topSpeedBonus: 12,     // 極速加成 (最高 368 km/h)
+    brakeEfficiency: 1.20,
+    heatRate: 1.35
+  },
+  MEDIUM: {
+    name: '中性 C2',
+    engName: 'MED C2',
+    colorHex: 0xffd700,
+    cssColor: '#ffd700',
+    badgeClass: 'bg-yellow-400 text-black',
+    gripFactor: 1.00,      // 基準抓地力 100%
+    topSpeedBonus: 0,      // 基準極速 (356 km/h)
+    brakeEfficiency: 1.00,
+    heatRate: 1.00
+  },
+  HARD: {
+    name: '硬胎 C1',
+    engName: 'HARD C1',
+    colorHex: 0xffffff,
+    cssColor: '#ffffff',
+    badgeClass: 'bg-slate-100 text-black',
+    gripFactor: 0.85,      // 抓地力 85%
+    topSpeedBonus: -13,    // 極速限制 (343 km/h)
+    brakeEfficiency: 0.88,
+    heatRate: 0.72
+  }
+};
+
+const state = {
+  compound: 'SOFT',
+  rpm: 4000,
+  idleRpm: 4000,
+  maxRpm: 15000,
+  gear: 0,
+  speed: 0,
+  throttle: 0,
+  sliderThrottle: 0,
+  brake: 0,
+  steering: 0,
+  sliderSteer: 0,
+  ers: 100,
+  brakeTemp: 280,
+  tireTemps: { fl: 90, fr: 90, rl: 95, rr: 95 },
+  downforce: 0,
+  rideHeight: 32.0,
+  drsOpen: false,
+  exploded: false,
+  aeroActive: false,
+  cameraMode: 'orbit',
+  lightingMode: 'day',
+  // 預設模式 0: 針對 W14 LCD_124_208 做單純垂直翻正 (scale(1, -1))，解決上下顛倒且不產生左右鏡像！
+  lcdFlipMode: 0,
+  audioEnabled: false,
+  isCustomGlbLoaded: false
+};
+
+const baseGearSpeeds = [0, 114, 156, 198, 236, 270, 300, 324, 340];
+const keys = { w: false, s: false, a: false, d: false, mouseBrake: false };
+
+const ledContainer = document.getElementById('hud-leds');
+const externalLeds = [];
+for (let i = 0; i < 15; i++) {
+  const d = document.createElement('div');
+  d.className = 'rounded-sm bg-slate-800 h-full transition-colors duration-75';
+  ledContainer.appendChild(d);
+  externalLeds.push(d);
+}
+
+// ==========================================
+// 2. 動態繪製 Pirelli P-ZERO 輪胎側壁 CanvasTexture
+// ==========================================
+const tireCanvas = document.createElement('canvas');
+tireCanvas.width = 512;
+tireCanvas.height = 512;
+const tireCtx = tireCanvas.getContext('2d');
+const pirelliTireTexture = new THREE.CanvasTexture(tireCanvas);
+pirelliTireTexture.anisotropy = 4;
+
+function drawPirelliTireWall(compoundKey) {
+  const comp = TIRE_COMPOUNDS[compoundKey];
+  const ctx = tireCtx;
+  const cx = 256, cy = 256;
+
+  ctx.fillStyle = '#12151a';
+  ctx.fillRect(0, 0, 512, 512);
+
+  ctx.strokeStyle = '#1e232b';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 220, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.strokeStyle = comp.cssColor;
+  ctx.lineWidth = 22;
+  ctx.lineCap = 'round';
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, 178, -Math.PI * 0.38, Math.PI * 0.38);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, 178, Math.PI * 0.62, Math.PI * 1.38);
+  ctx.stroke();
+
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.fillStyle = comp.cssColor;
+  ctx.font = 'italic 900 34px Arial, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('PIRELLI', 0, -165);
+
+  ctx.rotate(Math.PI);
+  ctx.fillText('P ZERO', 0, -165);
+  ctx.restore();
+
+  ctx.strokeStyle = '#2c3440';
+  ctx.lineWidth = 8;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 128, 0, Math.PI * 2);
+  ctx.stroke();
+
+  pirelliTireTexture.needsUpdate = true;
+}
+
+drawPirelliTireWall('SOFT');
+
+// ==========================================
+// 3. Three.js 場景、無色偏純白攝影棚環境光 (100% 還原原檔車色)
+// ==========================================
+const container = document.getElementById('canvas-container');
+const scene = new THREE.Scene();
+
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.02, 120);
+camera.position.set(3.8, 1.6, 4.2);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.15;
+container.appendChild(renderer.domElement);
+
+// 建立純中性色溫攝影棚環境貼圖 (移除所有青色/藍綠色偏，確保原檔黑銀碳纖維不變色)
+function createNeutralStudioEnvMap(isDay) {
+  const envScene = new THREE.Scene();
+  envScene.background = new THREE.Color(isDay ? 0xe5e7eb : 0x111318);
+
+  const topIntensity = isDay ? 0xffffff : 0x64748b;
+  const sideIntensity = isDay ? 0xf3f4f6 : 0x475569;
+
+  const topBox = new THREE.Mesh(
+    new THREE.PlaneGeometry(32, 32),
+    new THREE.MeshBasicMaterial({ color: topIntensity, side: THREE.DoubleSide })
+  );
+  topBox.position.set(0, 12, 0);
+  topBox.rotation.x = Math.PI / 2;
+  envScene.add(topBox);
+
+  const sideBoxL = new THREE.Mesh(
+    new THREE.PlaneGeometry(26, 8),
+    new THREE.MeshBasicMaterial({ color: sideIntensity, side: THREE.DoubleSide })
+  );
+  sideBoxL.position.set(12, 4, 0);
+  sideBoxL.rotation.y = Math.PI / 2;
+  envScene.add(sideBoxL);
+
+  const sideBoxR = sideBoxL.clone();
+  sideBoxR.position.set(-12, 4, 0);
+  envScene.add(sideBoxR);
+
+  const frontBox = new THREE.Mesh(
+    new THREE.PlaneGeometry(20, 10),
+    new THREE.MeshBasicMaterial({ color: sideIntensity, side: THREE.DoubleSide })
+  );
+  frontBox.position.set(0, 5, 14);
+  envScene.add(frontBox);
+
+  const pmremGenerator = new THREE.PMREMGenerator(renderer);
+  pmremGenerator.compileCubemapShader();
+  const envMap = pmremGenerator.fromScene(envScene, 0.04).texture;
+  pmremGenerator.dispose();
+  return envMap;
+}
+
+const dayEnvMap = createNeutralStudioEnvMap(true);
+const nightEnvMap = createNeutralStudioEnvMap(false);
+scene.environment = dayEnvMap;
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.maxPolarAngle = Math.PI / 2 - 0.01;
+controls.minDistance = 0.08;
+controls.maxDistance = 14;
+controls.target.set(0, 0.45, 0);
+
+// 純白中性展廳光源 (完全不染色)
+const hemiLight = new THREE.HemisphereLight(0xffffff, 0x475569, 1.35);
+scene.add(hemiLight);
+
+const dirLight = new THREE.DirectionalLight(0xffffff, 2.2);
+dirLight.position.set(5, 11, 6);
+dirLight.castShadow = true;
+dirLight.shadow.mapSize.set(2048, 2048);
+scene.add(dirLight);
+
+const frontFillLight = new THREE.DirectionalLight(0xffffff, 1.1);
+frontFillLight.position.set(-5, 4, 7);
+scene.add(frontFillLight);
+
+const cockpitLight = new THREE.PointLight(0xffffff, 1.2, 3.0);
+cockpitLight.position.set(0, 0.92, 0.45);
+scene.add(cockpitLight);
+
+const backRimLight = new THREE.DirectionalLight(0xe2e8f0, 1.2);
+backRimLight.position.set(0, 5, -8);
+scene.add(backRimLight);
+
+const gridHelper = new THREE.GridHelper(40, 80, 0x64748b, 0x94a3b8);
+gridHelper.position.y = 0.002;
+scene.add(gridHelper);
+
+const floorMat = new THREE.MeshStandardMaterial({ color: 0xd1d5db, roughness: 0.45, metalness: 0.1 });
+const floorMesh = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), floorMat);
+floorMesh.rotation.x = -Math.PI / 2;
+floorMesh.receiveShadow = true;
+scene.add(floorMesh);
+
+// ==========================================
+// 4. 3D 方向盤動態液晶螢幕 (修正為垂直翻正 scale(-1, -1)，解除水平鏡像)
+// ==========================================
+const dashCanvas = document.createElement('canvas');
+dashCanvas.width = 512;
+dashCanvas.height = 256;
+const dashCtx = dashCanvas.getContext('2d');
+const dashTexture = new THREE.CanvasTexture(dashCanvas);
+dashTexture.minFilter = THREE.LinearFilter;
+
+let lastDashUpdate = 0;
+function updateSteeringWheelScreen(now) {
+  if (now - lastDashUpdate < 30) return;
+  lastDashUpdate = now;
+
+  const comp = TIRE_COMPOUNDS[state.compound];
+  const ctx = dashCtx;
+  ctx.save();
+
+  // 針對 W14 LCD_124_208 節點的正確座標轉換：
+  // 模式 0 (預設)：單純垂直翻轉 (scale(1, -1))，解決上下顛倒且文字由左至右完全正常！
+  if (state.isCustomGlbLoaded) {
+    if (state.lcdFlipMode === 0) {
+      ctx.translate(0, 256);
+      ctx.scale(1, -1);
+    } else if (state.lcdFlipMode === 1) {
+      ctx.translate(512, 256);
+      ctx.scale(-1, -1);
+    } else if (state.lcdFlipMode === 2) {
+      ctx.translate(512, 0);
+      ctx.scale(-1, 1);
+    }
+  }
+
+  ctx.fillStyle = '#05070b';
+  ctx.fillRect(0, 0, 512, 256);
+
+  ctx.strokeStyle = '#00f5d4';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(4, 4, 504, 248);
+
+  // 1. 頂部 15 顆超轉燈
+  const rpmRatio = (state.rpm - state.idleRpm) / (state.maxRpm - state.idleRpm);
+  const activeLeds = Math.ceil(rpmRatio * 15);
+  const flashBlue = state.rpm > 14200 && Math.floor(now / 55) % 2 === 0;
+
+  for (let i = 0; i < 15; i++) {
+    let color = '#1e293b';
+    if (i < activeLeds) {
+      if (flashBlue) color = '#00f5d4';
+      else if (i < 5) color = '#22c55e';
+      else if (i < 10) color = '#ef4444';
+      else color = '#3b82f6';
+    }
+    ctx.fillStyle = color;
+    ctx.fillRect(16 + i * 32, 14, 26, 16);
+    externalLeds[i].style.backgroundColor = color;
+  }
+
+  // 2. 中央大檔位數字与輪胎配方
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 116px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(state.gear === 0 ? 'N' : state.gear.toString(), 256, 152);
+
+  ctx.fillStyle = comp.cssColor;
+  ctx.font = 'bold 20px monospace';
+  ctx.fillText(`${comp.engName} [GRIP ${Math.round(comp.gripFactor * 100)}%]`, 256, 192);
+
+  // 3. 左側：車速與 DRS
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = 'bold 18px monospace';
+  ctx.fillText('SPD KM/H', 24, 66);
+
+  ctx.fillStyle = '#f8fafc';
+  ctx.font = 'bold 52px monospace';
+  ctx.fillText(Math.round(state.speed).toString().padStart(3, '0'), 24, 120);
+
+  ctx.fillStyle = state.drsOpen ? '#00f5d4' : '#1e293b';
+  ctx.fillRect(24, 134, 114, 30);
+  ctx.fillStyle = state.drsOpen ? '#000000' : '#64748b';
+  ctx.font = 'bold 19px monospace';
+  ctx.fillText(state.drsOpen ? 'DRS ON' : 'DRS OFF', 34, 156);
+
+  // 4. 右側：RPM 與 胎溫
+  ctx.textAlign = 'right';
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = 'bold 18px monospace';
+  ctx.fillText('RPM', 488, 66);
+
+  ctx.fillStyle = '#f8fafc';
+  ctx.font = 'bold 38px monospace';
+  ctx.fillText(Math.round(state.rpm).toString(), 488, 112);
+
+  ctx.fillStyle = state.tireTemps.fl > 115 ? '#ef4444' : '#22c55e';
+  ctx.font = 'bold 20px monospace';
+  ctx.fillText(`TYRE ${Math.round(state.tireTemps.fl)}°C`, 488, 156);
+
+  // 5. 底部 ERS 電量條
+  ctx.fillStyle = '#1e293b';
+  ctx.fillRect(24, 212, 464, 16);
+  ctx.fillStyle = '#00f5d4';
+  ctx.fillRect(24, 212, (464 * state.ers) / 100, 16);
+
+  ctx.restore();
+  dashTexture.needsUpdate = true;
+}
+
+// ==========================================
+// 5. 車體結構與 AMG W14 (.glb) 原生材質保留及 Z 軸方向盤綁定
+// ==========================================
+const f1CarRoot = new THREE.Group();
+scene.add(f1CarRoot);
+
+const bodyPaintMat = new THREE.MeshPhysicalMaterial({
+  color: 0x181b20, roughness: 0.22, metalness: 0.35, clearcoat: 1.0, clearcoatRoughness: 0.08
+});
+bodyPaintMat.userData.originalColor = bodyPaintMat.color.clone();
+
+const carbonMat = new THREE.MeshStandardMaterial({ color: 0x181b20, roughness: 0.4, metalness: 0.3 });
+carbonMat.userData.originalColor = carbonMat.color.clone();
+
+const metallicMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.2, metalness: 0.85 });
+const tireRubberMat = new THREE.MeshStandardMaterial({ color: 0x15181e, roughness: 0.75, metalness: 0.05 });
+const tireStripe3DMat = new THREE.MeshBasicMaterial({ color: 0xff1801, side: THREE.DoubleSide });
+const tireWallCanvasMat = new THREE.MeshStandardMaterial({
+  map: pirelliTireTexture, roughness: 0.5, metalness: 0.1
+});
+const brakeGlowMat = new THREE.MeshStandardMaterial({
+  color: 0x444444, roughness: 0.4, metalness: 0.6, emissive: 0xff3300, emissiveIntensity: 0.0
+});
+
+const parts = {
+  frontWingGroup: [],
+  engineCoverGroup: [],
+  sidepodLGroup: [],
+  sidepodRGroup: [],
+  rearWingGroup: [],
+  drsFlap: null,
+  steeringPivot: null,
+  wheelSteerFL: null,
+  wheelSteerFR: null,
+  wheelRL: null,
+  wheelRR: null,
+  wheelSpinMeshes: [],
+  brakeMaterials: [brakeGlowMat],
+  paintMaterials: [bodyPaintMat],
+  allCarMaterials: [bodyPaintMat, carbonMat],
+  w14TireSideMeshes: []
+};
+
+function attach3DTireCompoundRings(wheelGroup, halfWidth) {
+  const ringGroup = new THREE.Group();
+  [-halfWidth, halfWidth].forEach((xOffset, idx) => {
+    const wallDisc = new THREE.Mesh(
+      new THREE.RingGeometry(0.185, 0.332, 36),
+      tireWallCanvasMat
+    );
+    wallDisc.position.x = xOffset;
+    wallDisc.rotation.y = idx === 1 ? Math.PI / 2 : -Math.PI / 2;
+
+    const brightRing = new THREE.Mesh(
+      new THREE.RingGeometry(0.245, 0.272, 36),
+      tireStripe3DMat
+    );
+    brightRing.position.x = xOffset + (idx === 1 ? 0.002 : -0.002);
+    brightRing.rotation.y = idx === 1 ? Math.PI / 2 : -Math.PI / 2;
+
+    ringGroup.add(wallDisc, brightRing);
+  });
+  wheelGroup.add(ringGroup);
+  parts.wheelSpinMeshes.push(ringGroup);
+}
+
+function buildProceduralF1Proxy() {
+  f1CarRoot.clear();
+  parts.wheelSpinMeshes = [];
+
+  const fw = new THREE.Group();
+  const ec = new THREE.Group();
+  const spL = new THREE.Group();
+  const spR = new THREE.Group();
+  const rw = new THREE.Group();
+  const sw = new THREE.Group();
+  const fl = new THREE.Group();
+  const fr = new THREE.Group();
+
+  const floorBase = new THREE.Mesh(new THREE.BoxGeometry(1.58, 0.04, 3.65), carbonMat);
+  floorBase.position.set(0, 0.08, -0.1);
+  f1CarRoot.add(floorBase);
+
+  const chassisMain = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.42, 2.2), bodyPaintMat);
+  chassisMain.position.set(0, 0.36, 0.3);
+  const haloBar = new THREE.Mesh(new THREE.TorusGeometry(0.36, 0.028, 12, 24, Math.PI), carbonMat);
+  haloBar.rotation.x = Math.PI / 2 + 0.15;
+  haloBar.position.set(0, 0.64, 0.52);
+  f1CarRoot.add(chassisMain, haloBar);
+
+  const coverBody = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.44, 1.45), bodyPaintMat);
+  coverBody.position.set(0, 0.42, -0.75);
+  ec.add(coverBody);
+  f1CarRoot.add(ec);
+
+  const podGeo = new THREE.BoxGeometry(0.44, 0.34, 1.65);
+  const podL = new THREE.Mesh(podGeo, bodyPaintMat);
+  podL.position.set(0.48, 0.29, -0.25);
+  const podR = new THREE.Mesh(podGeo, bodyPaintMat);
+  podR.position.set(-0.48, 0.29, -0.25);
+  spL.add(podL);
+  spR.add(podR);
+  f1CarRoot.add(spL, spR);
+
+  const fwMain = new THREE.Mesh(new THREE.BoxGeometry(1.86, 0.03, 0.42), carbonMat);
+  fwMain.position.set(0, 0.1, 2.45);
+  const nose = new THREE.Mesh(new THREE.ConeGeometry(0.26, 1.35, 4), bodyPaintMat);
+  nose.rotation.x = Math.PI / 2;
+  nose.rotation.y = Math.PI / 4;
+  nose.scale.set(1, 1, 0.55);
+  nose.position.set(0, 0.24, 1.95);
+  fw.add(fwMain, nose);
+  f1CarRoot.add(fw);
+
+  const rwMain = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.03, 0.28), carbonMat);
+  rwMain.position.set(0, 0.72, -1.85);
+  const drsGroup = new THREE.Group();
+  drsGroup.position.set(0, 0.85, -1.92);
+  const drsMesh = new THREE.Mesh(new THREE.BoxGeometry(1.02, 0.025, 0.22), bodyPaintMat);
+  drsMesh.rotation.x = 0.42;
+  drsGroup.add(drsMesh);
+  rw.add(rwMain, drsGroup);
+  f1CarRoot.add(rw);
+
+  sw.position.set(0, 0.56, 0.65);
+  sw.rotation.x = -0.28;
+  sw.userData.initialQuat = sw.quaternion.clone();
+  const swBody = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.16, 0.025), carbonMat);
+  const screenMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.18, 0.095), new THREE.MeshBasicMaterial({ map: dashTexture }));
+  screenMesh.position.set(0, 0.01, 0.015);
+  sw.add(swBody, screenMesh);
+  f1CarRoot.add(sw);
+
+  function createProxyWheel() {
+    const holder = new THREE.Group();
+    const spin = new THREE.Group();
+    const tire = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.36, 32), tireRubberMat);
+    tire.rotation.z = Math.PI / 2;
+    tire.castShadow = true;
+    const spoke = new THREE.Mesh(new THREE.BoxGeometry(0.37, 0.34, 0.04), metallicMat);
+    spin.add(tire, spoke);
+    parts.wheelSpinMeshes.push(spin);
+
+    const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.06, 24), brakeGlowMat);
+    disc.rotation.z = Math.PI / 2;
+    holder.add(spin, disc);
+    attach3DTireCompoundRings(holder, 0.182);
+    return holder;
+  }
+
+  fl.position.set(0.8, 0.36, 1.8);
+  fl.userData.initialQuat = fl.quaternion.clone();
+  fl.add(createProxyWheel());
+  fr.position.set(-0.8, 0.36, 1.8);
+  fr.userData.initialQuat = fr.quaternion.clone();
+  fr.add(createProxyWheel());
+  const rl = createProxyWheel();
+  rl.position.set(0.78, 0.36, -1.8);
+  const rr = createProxyWheel();
+  rr.position.set(-0.78, 0.36, -1.8);
+  f1CarRoot.add(fl, fr, rl, rr);
+
+  parts.frontWingGroup = [fw];
+  parts.engineCoverGroup = [ec];
+  parts.sidepodLGroup = [spL];
+  parts.sidepodRGroup = [spR];
+  parts.rearWingGroup = [rw];
+  parts.drsFlap = drsMesh;
+  parts.steeringPivot = sw;
+  parts.wheelSteerFL = fl;
+  parts.wheelSteerFR = fr;
+  parts.wheelRL = rl;
+  parts.wheelRR = rr;
+
+  [fw, ec, spL, spR, rw, fl, fr, rl, rr].forEach(o => { o.userData.origPos = o.position.clone(); });
+}
+
+buildProceduralF1Proxy();
+
+// ==========================================
+// 載入你的 AMG W14 (.glb)：100% 保留原檔材質參數，不強制改動
+// ==========================================
+function loadW14GlbFromUrl(url, fileNameLabel) {
+  const overlay = document.getElementById('loading-overlay');
+  const bar = document.getElementById('loading-bar');
+  const pctText = document.getElementById('loading-percent');
+  overlay.classList.remove('hidden');
+  overlay.classList.add('flex');
+
+  const loader = new THREE.GLTFLoader();
+  loader.load(
+    url,
+    (gltf) => {
+      const model = gltf.scene;
+
+      f1CarRoot.clear();
+      f1CarRoot.add(model);
+
+      parts.frontWingGroup = [];
+      parts.engineCoverGroup = [];
+      parts.sidepodLGroup = [];
+      parts.sidepodRGroup = [];
+      parts.rearWingGroup = [];
+      parts.wheelSpinMeshes = [];
+      parts.brakeMaterials = [];
+      parts.paintMaterials = [];
+      parts.allCarMaterials = [];
+      parts.w14TireSideMeshes = [];
+
+      model.traverse((node) => {
+        if (node.isMesh) {
+          node.castShadow = true;
+          node.receiveShadow = true;
+          const mats = Array.isArray(node.material) ? node.material : [node.material];
+          mats.forEach((mat) => {
+            if (!mat) return;
+            // 關鍵：完全不修改原檔的 metalness 與 roughness，備份原檔原始顏色供日夜切換使用！
+            if (!mat.userData.originalColor && mat.color) {
+              mat.userData.originalColor = mat.color.clone();
+              mat.userData.customBaseColor = mat.color.clone();
+            }
+            if (!parts.allCarMaterials.includes(mat)) {
+              parts.allCarMaterials.push(mat);
+            }
+
+            if (mat.name === 'mercedes_paint' && !parts.paintMaterials.includes(mat)) {
+              parts.paintMaterials.push(mat);
+            }
+            if (mat.name === 'discs') {
+              mat.emissive = new THREE.Color(0xff3300);
+              mat.emissiveIntensity = 0;
+              parts.brakeMaterials.push(mat);
+            }
+            if (mat.name === 'TIRE_SIDES.001') {
+              parts.w14TireSideMeshes.push(node);
+            }
+          });
+        }
+
+        const n = node.name;
+        node.userData.origPos = node.position.clone();
+        node.userData.initialQuat = node.quaternion.clone();
+
+        if (n.startsWith('frontwing_') || n.startsWith('frontspoiler_') || n.startsWith('frontflap_') || n.startsWith('nosecone')) {
+          parts.frontWingGroup.push(node);
+        }
+        if (n.startsWith('sidepod_fl')) parts.sidepodLGroup.push(node);
+        if (n.startsWith('sidepod_fr')) parts.sidepodRGroup.push(node);
+        if (n.startsWith('topcanopy_bm') || n.startsWith('camera_wing')) parts.engineCoverGroup.push(node);
+
+        if (n === 'DRS_252_434') {
+          parts.drsFlap = node;
+          node.userData.origRotX = node.rotation.x;
+        }
+        if (n.startsWith('rearwing_top')) {
+          parts.rearWingGroup.push(node);
+        }
+
+        if (n === 'WHEEL_LF_38_69') parts.wheelSteerFL = node;
+        if (n === 'WHEEL_RF_62_102') parts.wheelSteerFR = node;
+        if (n === 'WHEEL_LR_82_134') parts.wheelRL = node;
+        if (n === 'WHEEL_RR_68_113') parts.wheelRR = node;
+
+        if (n.startsWith('TYRE_') || n.startsWith('wheel_fl') || n.startsWith('wheel_fr') || n.startsWith('wheel_bl') || n.startsWith('wheel_br')) {
+          parts.wheelSpinMeshes.push(node);
+        }
+
+        if (n === 'STEER_HR_148_167') {
+          parts.steeringPivot = node;
+        }
+        if (n.startsWith('CHAR_')) node.visible = false;
+        if (n === 'LCD_124_208') {
+          node.traverse((child) => {
+            if (child.isMesh) {
+              child.material = new THREE.MeshBasicMaterial({ map: dashTexture, side: THREE.DoubleSide });
+            }
+          });
+        }
+      });
+
+      if (parts.wheelSteerFL) attach3DTireCompoundRings(parts.wheelSteerFL, 0.183);
+      if (parts.wheelSteerFR) attach3DTireCompoundRings(parts.wheelSteerFR, 0.183);
+      if (parts.wheelRL) attach3DTireCompoundRings(parts.wheelRL, 0.226);
+      if (parts.wheelRR) attach3DTireCompoundRings(parts.wheelRR, 0.226);
+
+      state.isCustomGlbLoaded = true;
+      applyTireCompound(state.compound);
+      setLightingMode(state.lightingMode);
+
+      overlay.classList.add('hidden');
+      overlay.classList.remove('flex');
+      document.getElementById('model-status').textContent = `✅ 已載入原檔：${fileNameLabel} (原色還原 + Z軸方向盤)`;
+    },
+    (xhr) => {
+      if (xhr.total > 0) {
+        const pct = Math.min(100, Math.round((xhr.loaded / xhr.total) * 100));
+        bar.style.width = `${pct}%`;
+        pctText.textContent = `${pct}% (${(xhr.loaded / 1048576).toFixed(1)} MB / ${(xhr.total / 1048576).toFixed(1)} MB)`;
+      }
+    },
+    (err) => {
+      console.warn('讀取失敗，維持顯示代理車體：', err);
+      overlay.classList.add('hidden');
+      overlay.classList.remove('flex');
+    }
+  );
+}
+
+fetch('amg_w14_s1__www.vecarz.com.glb', { method: 'HEAD' })
+  .then(res => {
+    if (res.ok) loadW14GlbFromUrl('amg_w14_s1__www.vecarz.com.glb', 'amg_w14_s1__www.vecarz.com.glb');
+  })
+  .catch(() => {});
+
+document.getElementById('glb-file-input').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const objectUrl = URL.createObjectURL(file);
+  loadW14GlbFromUrl(objectUrl, file.name);
+});
+
+// ==========================================
+// 6. 切換輪胎配方與車色日夜調校
+// ==========================================
+function applyTireCompound(compoundKey) {
+  state.compound = compoundKey;
+  const comp = TIRE_COMPOUNDS[compoundKey];
+
+  drawPirelliTireWall(compoundKey);
+  tireStripe3DMat.color.setHex(comp.colorHex);
+
+  const maxPossibleSpeed = baseGearSpeeds[8] + 16 + comp.topSpeedBonus;
+  document.getElementById('tire-spec-hint').textContent = `極速 ${maxPossibleSpeed} / 抓地 ${Math.round(comp.gripFactor * 100)}%`;
+  document.getElementById('tire-spec-hint').style.color = comp.cssColor;
+  document.getElementById('hud-max-speed').textContent = maxPossibleSpeed;
+
+  const badge = document.getElementById('hud-compound-badge');
+  badge.textContent = comp.name;
+  badge.className = `text-[10px] px-1.5 py-0.5 rounded font-bold ${comp.badgeClass}`;
+
+  document.getElementById('hud-grip-text').textContent = `輪胎抓地力：${Math.round(comp.gripFactor * 100)}%`;
+}
+
+document.querySelectorAll('.tire-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tire-btn').forEach(b => b.classList.remove('active-btn'));
+    btn.classList.add('active-btn');
+    applyTireCompound(btn.dataset.compound);
+  });
+});
+
+// 日夜切換：白天 100% 採用原檔顏色，晚上以原檔為基準乘以 0.58 壓暗
+function setLightingMode(mode) {
+  state.lightingMode = mode;
+  document.getElementById('btn-env-day').classList.toggle('active-btn', mode === 'day');
+  document.getElementById('btn-env-night').classList.toggle('active-btn', mode === 'night');
+
+  if (mode === 'day') {
+    scene.background = new THREE.Color(0xdbe2ec);
+    scene.fog = new THREE.FogExp2(0xdbe2ec, 0.015);
+    scene.environment = dayEnvMap;
+
+    hemiLight.intensity = 1.35;
+    dirLight.intensity = 2.2;
+    frontFillLight.intensity = 1.1;
+    cockpitLight.intensity = 1.2;
+    backRimLight.intensity = 1.2;
+    renderer.toneMappingExposure = 1.15;
+
+    floorMat.color.setHex(0xcbd5e1);
+    floorMat.roughness = 0.45;
+    floorMat.metalness = 0.1;
+
+    // 白天：100% 還原原檔顏色與反射強度
+    parts.allCarMaterials.forEach(mat => {
+      if (mat.color && mat.userData.customBaseColor) {
+        mat.color.copy(mat.userData.customBaseColor);
+      }
+      mat.envMapIntensity = 1.0;
+      mat.needsUpdate = true;
+    });
+  } else {
+    scene.background = new THREE.Color(0x090c12);
+    scene.fog = new THREE.FogExp2(0x090c12, 0.025);
+    scene.environment = nightEnvMap;
+
+    hemiLight.intensity = 0.7;
+    dirLight.intensity = 1.25;
+    frontFillLight.intensity = 0.65;
+    cockpitLight.intensity = 0.9;
+    backRimLight.intensity = 0.8;
+    renderer.toneMappingExposure = 0.95;
+
+    floorMat.color.setHex(0x0c1017);
+    floorMat.roughness = 0.25;
+    floorMat.metalness = 0.5;
+
+    // 夜間：以原檔顏色為基礎等比壓暗 (0.58x)
+    parts.allCarMaterials.forEach(mat => {
+      if (mat.color && mat.userData.customBaseColor) {
+        mat.color.copy(mat.userData.customBaseColor).multiplyScalar(0.58);
+      }
+      mat.envMapIntensity = 0.65;
+      mat.needsUpdate = true;
+    });
+  }
+}
+
+setLightingMode('day');
+document.getElementById('btn-env-day').addEventListener('click', () => setLightingMode('day'));
+document.getElementById('btn-env-night').addEventListener('click', () => setLightingMode('night'));
+
+document.querySelectorAll('.paint-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    parts.paintMaterials.forEach(mat => {
+      if (btn.dataset.orig === 'true' && mat.userData.originalColor) {
+        mat.userData.customBaseColor = mat.userData.originalColor.clone();
+      } else if (btn.dataset.color) {
+        mat.userData.customBaseColor = new THREE.Color(Number(btn.dataset.color));
+      }
+    });
+    setLightingMode(state.lightingMode);
+  });
+});
+
+// ==========================================
+// 7. 爆炸視角與 3D 空間拉線標籤
+// ==========================================
+const explodeConfig = [
+  { getGroup: () => parts.frontWingGroup, offset: new THREE.Vector3(0, 0.08, 0.95), title: '前鼻翼與碳纖鼻錐總成', desc: 'Nodes: frontwing_fl/fr + nosecone' },
+  { getGroup: () => parts.engineCoverGroup, offset: new THREE.Vector3(0, 0.75, -0.15), title: '引擎上蓋與 T-Cam 攝影機架', desc: 'Nodes: topcanopy_bm + camera_wing' },
+  { getGroup: () => parts.sidepodLGroup, offset: new THREE.Vector3(0.65, 0, 0), title: '左側箱散熱進氣道', desc: 'Nodes: sidepod_fl.001~006' },
+  { getGroup: () => parts.rearWingGroup, offset: new THREE.Vector3(0, 0.35, -0.75), title: '尾翼與 DRS 可動減阻翼片', desc: 'Nodes: rearwing_top + DRS_252_434' },
+  { getGroup: () => parts.wheelSteerFL ? [parts.wheelSteerFL] : [], offset: new THREE.Vector3(0.65, 0, 0), title: '18 吋倍耐力輪胎與碳陶煞車', desc: 'Node: WHEEL_LF_38_69' }
+];
+
+const calloutsContainer = document.getElementById('callouts-container');
+explodeConfig.forEach((item) => {
+  const el = document.createElement('div');
+  el.className = 'callout-label opacity-0';
+  el.innerHTML = `
+    <div class="glass-panel px-2.5 py-1.5 rounded border border-teal-400/60 text-left">
+      <div class="text-[10px] font-bold text-teal-300 tracking-wider">${item.title}</div>
+      <div class="text-[9px] text-slate-300">${item.desc}</div>
+    </div>
+    <div class="callout-line"></div>
+    <div class="callout-dot"></div>
+  `;
+  calloutsContainer.appendChild(el);
+  item.domEl = el;
+});
+
+function updateExplodeAndCallouts(delta) {
+  const speed = 6.0 * delta;
+  const tempVec = new THREE.Vector3();
+
+  explodeConfig.forEach(item => {
+    const list = item.getGroup();
+    list.forEach(obj => {
+      if (!obj || !obj.userData.origPos) return;
+      const goal = state.exploded ? obj.userData.origPos.clone().add(item.offset) : obj.userData.origPos;
+      obj.position.lerp(goal, speed);
+    });
+  });
+
+  parts.sidepodRGroup.forEach(obj => {
+    if (obj && obj.userData.origPos) {
+      obj.position.lerp(state.exploded ? obj.userData.origPos.clone().add(new THREE.Vector3(-0.65, 0, 0)) : obj.userData.origPos, speed);
+    }
+  });
+  [
+    { obj: parts.wheelSteerFR, vec: new THREE.Vector3(-0.65, 0, 0) },
+    { obj: parts.wheelRL, vec: new THREE.Vector3(0.65, 0, 0) },
+    { obj: parts.wheelRR, vec: new THREE.Vector3(-0.65, 0, 0) }
+  ].forEach(({ obj, vec }) => {
+    if (obj && obj.userData.origPos) {
+      obj.position.lerp(state.exploded ? obj.userData.origPos.clone().add(vec) : obj.userData.origPos, speed);
+    }
+  });
+
+  explodeConfig.forEach(item => {
+    const list = item.getGroup();
+    if (!state.exploded || state.cameraMode === 'cockpit' || list.length === 0) {
+      item.domEl.style.opacity = '0';
+      return;
+    }
+    list[0].getWorldPosition(tempVec);
+    tempVec.y += 0.28;
+    tempVec.project(camera);
+
+    if (tempVec.z < 1.0) {
+      const x = (tempVec.x * 0.5 + 0.5) * window.innerWidth;
+      const y = (-(tempVec.y * 0.5) + 0.5) * window.innerHeight;
+      item.domEl.style.left = `${x}px`;
+      item.domEl.style.top = `${y}px`;
+      item.domEl.style.opacity = '1';
+    } else {
+      item.domEl.style.opacity = '0';
+    }
+  });
+}
+
+// ==========================================
+// 8. 風洞空氣動力學流線模擬
+// ==========================================
+const aeroGroup = new THREE.Group();
+aeroGroup.visible = false;
+scene.add(aeroGroup);
+
+const aeroParticles = [];
+const streamCurveDefs = [
+  new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0.18, 3.8), new THREE.Vector3(0, 0.32, 2.2), new THREE.Vector3(0, 0.82, 0.5), new THREE.Vector3(0, 0.92, -1.8), new THREE.Vector3(0, 1.2, -3.4)]),
+  new THREE.CatmullRomCurve3([new THREE.Vector3(0.55, 0.15, 3.8), new THREE.Vector3(0.72, 0.25, 2.3), new THREE.Vector3(0.62, 0.38, 0.0), new THREE.Vector3(0.48, 0.68, -1.9), new THREE.Vector3(0.6, 0.95, -3.4)]),
+  new THREE.CatmullRomCurve3([new THREE.Vector3(-0.55, 0.15, 3.8), new THREE.Vector3(-0.72, 0.25, 2.3), new THREE.Vector3(-0.62, 0.38, 0.0), new THREE.Vector3(-0.48, 0.68, -1.9), new THREE.Vector3(-0.6, 0.95, -3.4)]),
+  new THREE.CatmullRomCurve3([new THREE.Vector3(0.25, 0.06, 3.6), new THREE.Vector3(0.22, 0.06, 0.5), new THREE.Vector3(0.28, 0.08, -1.7), new THREE.Vector3(0.35, 0.45, -3.4)]),
+  new THREE.CatmullRomCurve3([new THREE.Vector3(-0.25, 0.06, 3.6), new THREE.Vector3(-0.22, 0.06, 0.5), new THREE.Vector3(-0.28, 0.08, -1.7), new THREE.Vector3(-0.35, 0.45, -3.4)])
+];
+
+streamCurveDefs.forEach((curve, idx) => {
+  const isVenturi = idx >= 3;
+  const lineGeo = new THREE.BufferGeometry().setFromPoints(curve.getPoints(60));
+  const lineMat = new THREE.LineBasicMaterial({ color: isVenturi ? 0xef4444 : 0x00a896, transparent: true, opacity: 0.55 });
+  aeroGroup.add(new THREE.Line(lineGeo, lineMat));
+
+  for (let i = 0; i < 14; i++) {
+    const pMesh = new THREE.Mesh(
+      new THREE.SphereGeometry(0.028, 8, 8),
+      new THREE.MeshBasicMaterial({ color: isVenturi ? 0xfbbf24 : 0x00f5d4 })
+    );
+    aeroGroup.add(pMesh);
+    aeroParticles.push({ mesh: pMesh, curve, t: i / 14 });
+  }
+});
+
+function updateAeroStreamlines(delta) {
+  if (!state.aeroActive) return;
+  const flowSpeed = 0.45 + (state.speed / 360) * 1.6;
+  aeroParticles.forEach(p => {
+    p.t = (p.t + delta * flowSpeed) % 1.0;
+    p.curve.getPointAt(p.t, p.mesh.position);
+  });
+}
+
+// ==========================================
+// 9. V6 渦輪混合動力「多諧波 + 排氣脈衝 + 破音失真」聲浪合成器
+// ==========================================
+let audioCtx = null;
+let oscSub = null, oscFund = null, oscFifth = null, oscOct = null, oscTurbo = null;
+let exhaustFilter = null, noiseFilter = null, masterGain = null, turboGain = null;
+
+function makeDistortionCurve(amount) {
+  const k = typeof amount === 'number' ? amount : 50;
+  const n_samples = 44100;
+  const curve = new Float32Array(n_samples);
+  const deg = Math.PI / 180;
+  for (let i = 0; i < n_samples; ++i) {
+    const x = (i * 2) / n_samples - 1;
+    curve[i] = ((3 + k) * x * 20 * deg) / (Math.PI + k * Math.abs(x));
+  }
+  return curve;
+}
+
+function initAudioEngine() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+  masterGain = audioCtx.createGain();
+  masterGain.gain.value = 0.28;
+  masterGain.connect(audioCtx.destination);
+
+  const shaper = audioCtx.createWaveShaper();
+  shaper.curve = makeDistortionCurve(130);
+  shaper.oversample = '4x';
+
+  exhaustFilter = audioCtx.createBiquadFilter();
+  exhaustFilter.type = 'lowpass';
+  exhaustFilter.frequency.value = 750;
+  exhaustFilter.Q.value = 2.8;
+
+  shaper.connect(exhaustFilter);
+  exhaustFilter.connect(masterGain);
+
+  oscSub = audioCtx.createOscillator();
+  oscSub.type = 'triangle';
+  const gSub = audioCtx.createGain();
+  gSub.gain.value = 0.35;
+  oscSub.connect(gSub);
+  gSub.connect(shaper);
+
+  oscFund = audioCtx.createOscillator();
+  oscFund.type = 'sawtooth';
+  const gFund = audioCtx.createGain();
+  gFund.gain.value = 0.55;
+  oscFund.connect(gFund);
+  gFund.connect(shaper);
+
+  oscFifth = audioCtx.createOscillator();
+  oscFifth.type = 'square';
+  const gFifth = audioCtx.createGain();
+  gFifth.gain.value = 0.25;
+  oscFifth.connect(gFifth);
+  gFifth.connect(shaper);
+
+  oscOct = audioCtx.createOscillator();
+  oscOct.type = 'sawtooth';
+  const gOct = audioCtx.createGain();
+  gOct.gain.value = 0.3;
+  oscOct.connect(gOct);
+  gOct.connect(shaper);
+
+  const bufferSize = audioCtx.sampleRate * 2;
+  const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const output = noiseBuffer.getChannelData(0);
+  let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+  for (let i = 0; i < bufferSize; i++) {
+    const white = Math.random() * 2 - 1;
+    b0 = 0.99886 * b0 + white * 0.0555179;
+    b1 = 0.99332 * b1 + white * 0.0750759;
+    b2 = 0.96900 * b2 + white * 0.1538520;
+    b3 = 0.86650 * b3 + white * 0.3104856;
+    b4 = 0.55000 * b4 + white * 0.5329522;
+    b5 = -0.7616 * b5 - white * 0.0168980;
+    output[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.12;
+    b6 = white * 0.115926;
+  }
+  const noiseSource = audioCtx.createBufferSource();
+  noiseSource.buffer = noiseBuffer;
+  noiseSource.loop = true;
+
+  noiseFilter = audioCtx.createBiquadFilter();
+  noiseFilter.type = 'bandpass';
+  noiseFilter.frequency.value = 500;
+  noiseFilter.Q.value = 1.8;
+
+  const noiseGain = audioCtx.createGain();
+  noiseGain.gain.value = 0.38;
+  noiseSource.connect(noiseFilter);
+  noiseFilter.connect(noiseGain);
+  noiseGain.connect(masterGain);
+
+  oscTurbo = audioCtx.createOscillator();
+  oscTurbo.type = 'sine';
+  turboGain = audioCtx.createGain();
+  turboGain.gain.value = 0.03;
+  oscTurbo.connect(turboGain);
+  turboGain.connect(masterGain);
+
+  oscSub.start();
+  oscFund.start();
+  oscFifth.start();
+  oscOct.start();
+  noiseSource.start();
+  oscTurbo.start();
+
+  state.audioEnabled = true;
+  const btn = document.getElementById('btn-audio');
+  btn.textContent = '🔊 V6 諧波聲浪運行中 (點擊靜音)';
+  btn.classList.add('active-btn');
+}
+
+function triggerGearShiftCut() {
+  if (!state.audioEnabled || !masterGain) return;
+  const now = audioCtx.currentTime;
+  masterGain.gain.cancelScheduledValues(now);
+  masterGain.gain.setValueAtTime(0.01, now);
+  masterGain.gain.exponentialRampToValueAtTime(0.34, now + 0.045);
+  masterGain.gain.setTargetAtTime(0.28, now + 0.06, 0.04);
+}
+
+function updateEngineAudio() {
+  if (!state.audioEnabled || !audioCtx) return;
+  const now = audioCtx.currentTime;
+
+  const idleLope = state.rpm < 4800 ? Math.sin(now * 28) * 6 : 0;
+  const f0 = (state.rpm / 24) + idleLope;
+
+  oscSub.frequency.setTargetAtTime(f0 * 0.5, now, 0.02);
+  oscFund.frequency.setTargetAtTime(f0, now, 0.02);
+  oscFifth.frequency.setTargetAtTime(f0 * 1.5, now, 0.02);
+  oscOct.frequency.setTargetAtTime(f0 * 3.0, now, 0.02);
+
+  const filterFreq = f0 * 2.8 + state.throttle * 2600;
+  exhaustFilter.frequency.setTargetAtTime(filterFreq, now, 0.03);
+  noiseFilter.frequency.setTargetAtTime(300 + (state.rpm / 15000) * 1800, now, 0.03);
+
+  const turboFreq = 1400 + (state.rpm / 15000) * 2800;
+  oscTurbo.frequency.setTargetAtTime(turboFreq, now, 0.04);
+  turboGain.gain.setTargetAtTime(0.015 + (state.throttle + state.brake) * 0.025, now, 0.04);
+}
+
+// ==========================================
+// 10. 鍵盤與 UI 控制綁定
+// ==========================================
+document.getElementById('btn-flip-lcd').addEventListener('click', () => {
+  state.lcdFlipMode = (state.lcdFlipMode + 1) % 4;
+});
+
+function shiftUp() {
+  if (state.gear < 8) {
+    state.gear++;
+    state.rpm = Math.max(state.idleRpm, state.rpm * 0.74);
+    triggerGearShiftCut();
+  }
+}
+
+function shiftDown() {
+  if (state.gear > 0) {
+    state.gear--;
+    state.rpm = Math.min(state.maxRpm, state.rpm * 1.22);
+    triggerGearShiftCut();
+  }
+}
+
+window.addEventListener('keydown', (e) => {
+  if (e.code === 'KeyW' || e.code === 'ArrowUp') {
+    keys.w = true;
+    if (state.gear === 0) state.gear = 1;
+  }
+  if (e.code === 'KeyS' || e.code === 'ArrowDown') keys.s = true;
+  if (e.code === 'KeyA' || e.code === 'ArrowLeft') keys.a = true;
+  if (e.code === 'KeyD' || e.code === 'ArrowRight') keys.d = true;
+  if (e.code === 'KeyE') shiftUp();
+  if (e.code === 'KeyQ') shiftDown();
+  if (e.code === 'Space') {
+    e.preventDefault();
+    toggleDRS();
+  }
+});
+
+window.addEventListener('keyup', (e) => {
+  if (e.code === 'KeyW' || e.code === 'ArrowUp') keys.w = false;
+  if (e.code === 'KeyS' || e.code === 'ArrowDown') keys.s = false;
+  if (e.code === 'KeyA' || e.code === 'ArrowLeft') keys.a = false;
+  if (e.code === 'KeyD' || e.code === 'ArrowRight') keys.d = false;
+});
+
+const sliderThrottle = document.getElementById('slider-throttle');
+sliderThrottle.addEventListener('input', (e) => {
+  state.sliderThrottle = Number(e.target.value) / 100;
+  if (state.sliderThrottle > 0 && state.gear === 0) state.gear = 1;
+});
+
+const sliderSteer = document.getElementById('slider-steer');
+sliderSteer.addEventListener('input', (e) => {
+  state.sliderSteer = -Number(e.target.value) / 100;
+});
+sliderSteer.addEventListener('change', (e) => {
+  e.target.value = 0;
+  state.sliderSteer = 0;
+});
+
+document.getElementById('btn-gear-up').addEventListener('click', shiftUp);
+document.getElementById('btn-gear-down').addEventListener('click', shiftDown);
+
+const btnBrakeHold = document.getElementById('btn-brake-hold');
+btnBrakeHold.addEventListener('mousedown', () => { keys.mouseBrake = true; });
+window.addEventListener('mouseup', () => { keys.mouseBrake = false; });
+
+function setCameraMode(mode) {
+  state.cameraMode = mode;
+  ['btn-cam-orbit', 'btn-cam-cockpit', 'btn-cam-front', 'btn-cam-rear'].forEach(id => {
+    document.getElementById(id).classList.remove('active-btn');
+  });
+  const extHud = document.getElementById('external-hud');
+  controls.enableDamping = false;
+
+  if (mode === 'cockpit') {
+    document.getElementById('btn-cam-cockpit').classList.add('active-btn');
+    extHud.style.opacity = '0';
+    extHud.style.pointerEvents = 'none';
+    camera.position.set(0, 0.72, 0.32);
+    controls.target.set(0, 0.58, 0.82);
+    controls.minDistance = 0.05;
+    controls.maxDistance = 0.6;
+  } else if (mode === 'front') {
+    document.getElementById('btn-cam-front').classList.add('active-btn');
+    extHud.style.opacity = '1';
+    camera.position.set(1.8, 0.55, 2.5);
+    controls.target.set(0.6, 0.36, 1.8);
+    controls.minDistance = 0.4;
+    controls.maxDistance = 14;
+  } else if (mode === 'rear') {
+    document.getElementById('btn-cam-rear').classList.add('active-btn');
+    extHud.style.opacity = '1';
+    camera.position.set(-1.5, 1.15, -3.1);
+    controls.target.set(0, 0.75, -1.9);
+    controls.minDistance = 0.4;
+    controls.maxDistance = 14;
+  } else {
+    document.getElementById('btn-cam-orbit').classList.add('active-btn');
+    extHud.style.opacity = '1';
+    extHud.style.pointerEvents = 'auto';
+    camera.position.set(3.8, 1.6, 4.2);
+    controls.target.set(0, 0.45, 0);
+    controls.minDistance = 0.6;
+    controls.maxDistance = 14;
+  }
+
+  controls.update();
+  controls.enableDamping = true;
+}
+
+document.getElementById('btn-cam-orbit').addEventListener('click', () => setCameraMode('orbit'));
+document.getElementById('btn-cam-cockpit').addEventListener('click', () => setCameraMode('cockpit'));
+document.getElementById('btn-cam-front').addEventListener('click', () => setCameraMode('front'));
+document.getElementById('btn-cam-rear').addEventListener('click', () => setCameraMode('rear'));
+
+document.getElementById('btn-explode').addEventListener('click', (e) => {
+  state.exploded = !state.exploded;
+  e.currentTarget.classList.toggle('active-btn', state.exploded);
+  document.getElementById('state-explode').textContent = state.exploded ? '開啟' : '關閉';
+});
+
+document.getElementById('btn-aero').addEventListener('click', (e) => {
+  state.aeroActive = !state.aeroActive;
+  aeroGroup.visible = state.aeroActive;
+  e.currentTarget.classList.toggle('active-btn', state.aeroActive);
+  document.getElementById('state-aero').textContent = state.aeroActive ? '開啟' : '關閉';
+});
+
+function toggleDRS() {
+  state.drsOpen = !state.drsOpen;
+  const btn = document.getElementById('btn-drs');
+  btn.classList.toggle('active-btn', state.drsOpen);
+  document.getElementById('state-drs').textContent = state.drsOpen ? '開啟' : '關閉';
+
+  const badge = document.getElementById('hud-drs-badge');
+  badge.textContent = state.drsOpen ? 'DRS 開啟' : 'DRS 關閉';
+  badge.className = state.drsOpen
+    ? 'text-[10px] px-1.5 py-0.5 rounded bg-teal-400 text-black font-bold'
+    : 'text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-bold';
+}
+document.getElementById('btn-drs').addEventListener('click', toggleDRS);
+
+document.getElementById('btn-audio').addEventListener('click', () => {
+  if (!audioCtx) {
+    initAudioEngine();
+  } else {
+    state.audioEnabled = !state.audioEnabled;
+    masterGain.gain.value = state.audioEnabled ? 0.28 : 0;
+    document.getElementById('btn-audio').classList.toggle('active-btn', state.audioEnabled);
+  }
+});
+
+// ==========================================
+// 11. 主渲染與物理遙測迴圈 (含四元數 Z 軸方向盤旋轉修正)
+// ==========================================
+const clock = new THREE.Clock();
+const localZAxis = new THREE.Vector3(0, 0, 1);
+const worldYAxis = new THREE.Vector3(0, 1, 0);
+const steerQuat = new THREE.Quaternion();
+
+function getTireBorderColor(temp) {
+  if (temp < 85) return '#38bdf8';
+  if (temp <= 112) return '#22c55e';
+  if (temp <= 125) return '#eab308';
+  return '#ef4444';
+}
+
+function updatePowertrainState(delta) {
+  const comp = TIRE_COMPOUNDS[state.compound];
+  const targetThrottle = keys.w ? 1.0 : state.sliderThrottle;
+  const targetBrake = (keys.s || keys.mouseBrake) ? 1.0 : 0.0;
+
+  state.throttle = THREE.MathUtils.lerp(state.throttle, targetThrottle, delta * 8);
+  state.brake = THREE.MathUtils.lerp(state.brake, targetBrake, delta * 10);
+
+  const keySteer = (keys.a ? 1 : 0) - (keys.d ? 1 : 0);
+  const targetSteer = keySteer !== 0 ? keySteer : state.sliderSteer;
+  state.steering = THREE.MathUtils.lerp(state.steering, targetSteer, delta * 8);
+
+  if (state.gear === 0) {
+    const targetRpm = state.idleRpm + state.throttle * (state.maxRpm - state.idleRpm);
+    state.rpm = THREE.MathUtils.lerp(state.rpm, targetRpm, delta * 9);
+    state.speed = Math.max(0, state.speed - delta * 25);
+  } else {
+    const gearFactor = state.gear / 8;
+    const maxGearSpeed = baseGearSpeeds[state.gear] + (comp.topSpeedBonus * gearFactor) + (state.drsOpen ? 16 : 0);
+
+    if (state.throttle > 0.03) {
+      const accelFactor = (9.5 - state.gear) * 16.5 * state.throttle * comp.gripFactor;
+      state.speed = Math.min(maxGearSpeed, state.speed + accelFactor * delta);
+      state.ers = Math.max(0, state.ers - delta * 2.8 * state.throttle);
+    } else {
+      state.speed = Math.max(0, state.speed - delta * 15);
+    }
+
+    if (state.brake > 0.05) {
+      state.speed = Math.max(0, state.speed - state.brake * 98 * comp.brakeEfficiency * delta);
+      state.ers = Math.min(100, state.ers + delta * 7.0 * state.brake);
+      if (state.speed > 40) {
+        state.brakeTemp = Math.min(1050, state.brakeTemp + delta * 650 * state.brake);
+      }
+    }
+
+    const speedRatio = state.speed / Math.max(1, maxGearSpeed);
+    const calcRpm = state.idleRpm + speedRatio * (state.maxRpm - state.idleRpm);
+    if (calcRpm > 14600 && state.gear < 8 && state.sliderThrottle > 0.5) {
+      shiftUp();
+    }
+
+    const revJitter = calcRpm > 14750 ? (Math.random() - 0.5) * 380 : 0;
+    state.rpm = THREE.MathUtils.clamp(calcRpm + revJitter, state.idleRpm, state.maxRpm);
+  }
+
+  // 1. 下壓力與底盤高度
+  const vNorm = state.speed / 350;
+  const drsAeroDrop = state.drsOpen ? 0.78 : 1.0;
+  state.downforce = Math.round(vNorm * vNorm * 1450 * drsAeroDrop);
+  state.rideHeight = Math.max(8, Math.round(32 - vNorm * vNorm * 22));
+
+  // 2. 四輪熱力學模擬
+  const ambientCool = 75;
+  const steerLoad = Math.abs(state.steering) * 28 * vNorm;
+  const frontHeatTarget = ambientCool + vNorm * 25 + state.brake * 45 * comp.heatRate + steerLoad;
+  const rearHeatTarget = ambientCool + vNorm * 28 + state.throttle * 38 * comp.heatRate + steerLoad * 0.6;
+
+  state.tireTemps.fl = THREE.MathUtils.lerp(state.tireTemps.fl, frontHeatTarget + (state.steering < 0 ? 8 : 0), delta * 1.8);
+  state.tireTemps.fr = THREE.MathUtils.lerp(state.tireTemps.fr, frontHeatTarget + (state.steering > 0 ? 8 : 0), delta * 1.8);
+  state.tireTemps.rl = THREE.MathUtils.lerp(state.tireTemps.rl, rearHeatTarget, delta * 1.8);
+  state.tireTemps.rr = THREE.MathUtils.lerp(state.tireTemps.rr, rearHeatTarget, delta * 1.8);
+
+  // 3. 煞車碟盤熱輻射自發光
+  state.brakeTemp = Math.max(280, state.brakeTemp - delta * (80 + state.speed * 0.6));
+  const glowRatio = Math.max(0, (state.brakeTemp - 450) / 600);
+  parts.brakeMaterials.forEach(mat => { mat.emissiveIntensity = glowRatio * 2.6; });
+
+  // 4. 輪胎高速滾動與地面網格移動
+  const linearSpeedMps = state.speed / 3.6;
+  const wheelAngularVel = linearSpeedMps / 0.36;
+  parts.wheelSpinMeshes.forEach(w => {
+    w.rotation.x += wheelAngularVel * delta;
+  });
+  gridHelper.position.z = (gridHelper.position.z - linearSpeedMps * delta) % 0.5;
+
+  // 5. 前輪轉向與方向盤「嚴格繞 Z 軸心旋轉」
+  // 因為 W14 的 STEER_HR_148_167 初始矩陣把本地 Y 軸與 Z 軸做了約 90 度置換，
+  // 透過在初始四元數 (initialQuat) 右乘本地 Y 軸四元數 (對應世界空間的轉向柱 Z 軸縱深)，
+  // 即可讓方向盤完美呈現像真實賽車一樣繞著轉向柱中心軸 (Z軸平面) 旋轉！
+  const maxSteerAngle = 0.40;
+  if (parts.wheelSteerFL && parts.wheelSteerFL.userData.initialQuat) {
+    steerQuat.setFromAxisAngle(worldYAxis, state.steering * maxSteerAngle);
+    parts.wheelSteerFL.quaternion.copy(parts.wheelSteerFL.userData.initialQuat).premultiply(steerQuat);
+  }
+  if (parts.wheelSteerFR && parts.wheelSteerFR.userData.initialQuat) {
+    steerQuat.setFromAxisAngle(worldYAxis, state.steering * maxSteerAngle);
+    parts.wheelSteerFR.quaternion.copy(parts.wheelSteerFR.userData.initialQuat).premultiply(steerQuat);
+  }
+  if (parts.steeringPivot && parts.steeringPivot.userData.initialQuat) {
+    // 在車手視角平面 (XY平面) 繞著 Z 軸縱深軸心旋轉
+    steerQuat.setFromAxisAngle(localZAxis, -state.steering * 1.35);
+    parts.steeringPivot.quaternion.copy(parts.steeringPivot.userData.initialQuat).premultiply(steerQuat);
+  }
+
+  if (parts.drsFlap) {
+    const baseRot = parts.drsFlap.userData.origRotX !== undefined ? parts.drsFlap.userData.origRotX : 0.42;
+    const targetDrsAngle = state.drsOpen ? baseRot - 0.40 : baseRot;
+    parts.drsFlap.rotation.x = THREE.MathUtils.lerp(parts.drsFlap.rotation.x, targetDrsAngle, delta * 10);
+  }
+
+  // 6. 更新繁體中文遙測面板 DOM
+  document.getElementById('ui-throttle-val').textContent = `${Math.round(state.throttle * 100)}%`;
+  document.getElementById('ui-steer-val').textContent = `${Math.round(-state.steering * 24)}°`;
+  document.getElementById('hud-speed').textContent = Math.round(state.speed);
+  document.getElementById('hud-downforce').textContent = state.downforce;
+  document.getElementById('hud-ride-height').textContent = state.rideHeight;
+  document.getElementById('hud-gear').textContent = state.gear === 0 ? 'N' : state.gear;
+  document.getElementById('hud-rpm').textContent = Math.round(state.rpm).toLocaleString();
+  document.getElementById('hud-brake-temp').textContent = `${Math.round(state.brakeTemp)} °C`;
+  document.getElementById('hud-ers').textContent = `${Math.round(state.ers)}%`;
+  document.getElementById('bar-rpm').style.width = `${((state.rpm - 4000) / 11000) * 100}%`;
+  document.getElementById('bar-ers').style.width = `${state.ers}%`;
+
+  ['fl', 'fr', 'rl', 'rr'].forEach(pos => {
+    const t = state.tireTemps[pos];
+    const basePsi = pos.startsWith('f') ? 21.5 : 19.5;
+    const dynamicPsi = (basePsi + (t - 75) * 0.045).toFixed(1);
+    document.getElementById(`temp-${pos}`).textContent = `${Math.round(t)}°C`;
+    document.getElementById(`psi-${pos}`).textContent = `${dynamicPsi}p`;
+    document.getElementById(`tire-box-${pos}`).style.borderColor = getTireBorderColor(t);
+  });
+}
+
+function animate(now) {
+  requestAnimationFrame(animate);
+  const delta = Math.min(clock.getDelta(), 0.1);
+
+  updatePowertrainState(delta);
+  updateSteeringWheelScreen(now);
+  updateExplodeAndCallouts(delta);
+  updateAeroStreamlines(delta);
+  updateEngineAudio();
+
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+requestAnimationFrame(animate);
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>
