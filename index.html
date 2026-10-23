@@ -38,7 +38,7 @@
   <div class="glass-panel px-4 py-2.5 rounded-lg pointer-events-auto flex items-center gap-4">
     <div id="status-dot" class="w-3 h-3 rounded-full bg-teal-400 animate-ping"></div>
     <div>
-      <div class="text-[10px] text-teal-400 font-bold tracking-widest">MERCEDES-AMG W14 TELEMETRY & AERO LAB</div>
+      <div class="text-[10px] text-teal-400 font-bold tracking-widest">2026 F1 50:50 HYBRID PU & AERO TELEMETRY LAB</div>
       <div id="model-status" class="text-xs font-bold tracking-wider text-slate-200">目前顯示：代理車體 (請點擊右側按鈕載入你的 W14 .glb)</div>
     </div>
     <label class="cursor-pointer bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs px-3.5 py-2 rounded transition shadow-lg flex items-center gap-1.5">
@@ -54,7 +54,7 @@
       ☀️ 白天 (100% 原檔車色)
     </button>
     <button id="btn-env-night" class="border border-slate-600 bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded font-bold transition">
-      🌙 夜間 (原檔壓暗氛圍)
+      🌙 夜間 (原檔壓暗 + 火花高亮)
     </button>
   </div>
 </div>
@@ -68,7 +68,7 @@
       <button id="btn-cam-orbit" class="active-btn border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-xs py-2 rounded font-medium transition">360° 環繞</button>
       <button id="btn-cam-cockpit" class="border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-xs py-2 rounded font-medium transition">座艙方向盤</button>
       <button id="btn-cam-front" class="border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-xs py-1.5 rounded text-slate-300 transition">前輪/配方特寫</button>
-      <button id="btn-cam-rear" class="border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-xs py-1.5 rounded text-slate-300 transition">尾翼 DRS 特寫</button>
+      <button id="btn-cam-rear" class="border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-xs py-1.5 rounded text-slate-300 transition">車尾/排氣火花</button>
     </div>
     <button id="btn-flip-lcd" class="mt-2 w-full border border-slate-700 bg-slate-900/90 hover:bg-slate-800 text-[11px] py-1 rounded text-teal-300 transition">
       🔄 切換螢幕翻轉模式 (預設已翻正)
@@ -77,7 +77,7 @@
 
   <!-- 工程展示模式 -->
   <div class="glass-panel p-3 rounded-lg">
-    <div class="text-[11px] text-slate-400 uppercase tracking-wider mb-2 font-semibold">2. 工程測試 (Engineering)</div>
+    <div class="text-[11px] text-slate-400 uppercase tracking-wider mb-2 font-semibold">2. 工程測試 (Formula Addict)</div>
     <div class="flex flex-col gap-1.5">
       <button id="btn-explode" class="border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-xs py-2 px-3 rounded flex justify-between items-center transition">
         <span>🔧 結構爆炸圖 + 標籤</span>
@@ -91,6 +91,10 @@
         <span>🪽 DRS 可動尾翼開合</span>
         <span id="state-drs" class="text-[10px] font-bold text-slate-400">關閉</span>
       </button>
+      <button id="btn-sparks-force" class="border border-amber-600/60 bg-amber-950/40 hover:bg-amber-900/60 text-amber-200 text-xs py-2 px-3 rounded flex justify-between items-center transition">
+        <span>⚡ 強制底板火花測試</span>
+        <span id="state-sparks" class="text-[10px] font-bold text-amber-400">自動(&gt;260)</span>
+      </button>
     </div>
   </div>
 
@@ -98,10 +102,10 @@
   <div class="glass-panel p-3 rounded-lg">
     <div class="flex justify-between items-center mb-1.5">
       <span class="text-[11px] text-slate-400 uppercase tracking-wider font-semibold">3. 倍耐力輪胎配方</span>
-      <span id="tire-spec-hint" class="text-[10px] text-red-400 font-mono font-bold">極速 368 / 抓地 125%</span>
+      <span id="tire-spec-hint" class="text-[10px] text-red-500 font-mono font-bold">極速 368 / 抓地 125%</span>
     </div>
     <div class="grid grid-cols-3 gap-1.5 mb-2.5">
-      <button data-compound="SOFT" class="tire-btn active-btn border border-red-500/60 bg-slate-800 text-[11px] py-1.5 rounded font-bold text-red-300">軟胎 紅</button>
+      <button data-compound="SOFT" class="tire-btn active-btn border border-red-600/80 bg-slate-800 text-[11px] py-1.5 rounded font-bold text-red-400">軟胎 正紅</button>
       <button data-compound="MEDIUM" class="tire-btn border border-yellow-500/60 bg-slate-800 text-[11px] py-1.5 rounded font-bold text-yellow-300">中性 黃</button>
       <button data-compound="HARD" class="tire-btn border border-slate-300/60 bg-slate-800 text-[11px] py-1.5 rounded font-bold text-slate-100">硬胎 白</button>
     </div>
@@ -109,7 +113,7 @@
     <div class="text-[11px] text-slate-400 uppercase tracking-wider mb-1.5 font-semibold">車體烤漆切換 (可還原原檔)</div>
     <div class="flex gap-2 items-center">
       <button data-orig="true" class="paint-btn px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-[10px] font-bold border border-teal-400 text-white" title="還原 GLB 原始塗裝">原檔色</button>
-      <button data-color="0xdc2626" class="paint-btn w-6 h-6 rounded-full bg-red-600 border border-slate-400 hover:scale-110 transition" title="法拉利紅"></button>
+      <button data-color="0xb80012" class="paint-btn w-6 h-6 rounded-full bg-red-700 border border-slate-400 hover:scale-110 transition" title="賽車深紅"></button>
       <button data-color="0x00f5d4" class="paint-btn w-6 h-6 rounded-full bg-teal-400 border border-slate-400 hover:scale-110 transition" title="馬石油綠"></button>
       <button data-color="0xf97316" class="paint-btn w-6 h-6 rounded-full bg-orange-500 border border-slate-400 hover:scale-110 transition" title="木瓜橘"></button>
       <button data-color="0xe2e8f0" class="paint-btn w-6 h-6 rounded-full bg-slate-200 border border-slate-400 hover:scale-110 transition" title="銀箭銀"></button>
@@ -119,7 +123,7 @@
   <!-- 擬真聲浪引擎開關 -->
   <div class="glass-panel p-3 rounded-lg">
     <button id="btn-audio" class="w-full border border-teal-500/80 bg-teal-950/80 hover:bg-teal-800 text-teal-200 text-xs py-2.5 rounded font-bold tracking-wider transition">
-      🔊 啟動 V6 擬真諧波聲浪
+      🔊 啟動 2026 V6 + 350kW 聲浪
     </button>
   </div>
 </div>
@@ -132,7 +136,7 @@
       <span id="ui-throttle-val" class="font-mono text-xs">0%</span>
     </div>
     <input id="slider-throttle" type="range" min="0" max="100" value="0" class="w-full h-2 bg-slate-700 rounded-lg" />
-    <span class="text-[10px] text-slate-400 mt-1">可拖拉定速或按 [W]</span>
+    <span class="text-[10px] text-slate-400 mt-1">高轉收油門觸發車尾回火</span>
   </div>
 
   <div class="flex flex-col w-36">
@@ -162,7 +166,7 @@
   <div class="flex justify-between items-center mb-2">
     <span class="text-[11px] text-slate-300 tracking-wider font-bold">車隊維修區牆遙測數據</span>
     <div class="flex gap-1.5">
-      <span id="hud-compound-badge" class="text-[10px] px-1.5 py-0.5 rounded bg-red-600 text-white font-bold">軟胎 C3</span>
+      <span id="hud-compound-badge" class="text-[10px] px-1.5 py-0.5 rounded bg-red-700 text-white font-bold">軟胎 C3</span>
       <span id="hud-drs-badge" class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-bold">DRS 關閉</span>
     </div>
   </div>
@@ -232,7 +236,7 @@
     </div>
 
     <div class="flex justify-between pt-0.5">
-      <span class="text-slate-400">ERS 電池電量 (動能回收)</span>
+      <span class="text-slate-400">MGU-K 350kW 電量 (動能回收)</span>
       <span id="hud-ers" class="font-mono text-cyan-300">100%</span>
     </div>
     <div class="w-full bg-slate-800 h-1.5 rounded overflow-hidden">
@@ -246,39 +250,39 @@
 
 <script>
 // ==========================================
-// 1. 輪胎配方物理參數表與全域狀態機
+// 1. 輪胎配方物理參數表 (採用 Pirelli 官方深正紅 #c90016，杜絕發橘)
 // ==========================================
 const TIRE_COMPOUNDS = {
   SOFT: {
     name: '軟胎 C3',
     engName: 'SOFT C3',
-    colorHex: 0xff1801,
-    cssColor: '#ff1801',
-    badgeClass: 'bg-red-600 text-white',
-    gripFactor: 1.25,      // 起步與出彎加速度 +25%
-    topSpeedBonus: 12,     // 極速加成 (最高 368 km/h)
+    colorHex: 0xc90016,    // 倍耐力官方深正紅 (Pantone 186C)，不偏橘
+    cssColor: '#dc0018',
+    badgeClass: 'bg-red-700 text-white',
+    gripFactor: 1.25,
+    topSpeedBonus: 12,     // 極速 368 km/h
     brakeEfficiency: 1.20,
     heatRate: 1.35
   },
   MEDIUM: {
     name: '中性 C2',
     engName: 'MED C2',
-    colorHex: 0xffd700,
-    cssColor: '#ffd700',
+    colorHex: 0xffc400,
+    cssColor: '#ffc400',
     badgeClass: 'bg-yellow-400 text-black',
-    gripFactor: 1.00,      // 基準抓地力 100%
-    topSpeedBonus: 0,      // 基準極速 (356 km/h)
+    gripFactor: 1.00,
+    topSpeedBonus: 0,      // 極速 356 km/h
     brakeEfficiency: 1.00,
     heatRate: 1.00
   },
   HARD: {
     name: '硬胎 C1',
     engName: 'HARD C1',
-    colorHex: 0xffffff,
-    cssColor: '#ffffff',
+    colorHex: 0xf1f5f9,
+    cssColor: '#f1f5f9',
     badgeClass: 'bg-slate-100 text-black',
-    gripFactor: 0.85,      // 抓地力 85%
-    topSpeedBonus: -13,    // 極速限制 (343 km/h)
+    gripFactor: 0.85,
+    topSpeedBonus: -13,    // 極速 343 km/h
     brakeEfficiency: 0.88,
     heatRate: 0.72
   }
@@ -292,6 +296,7 @@ const state = {
   gear: 0,
   speed: 0,
   throttle: 0,
+  prevThrottle: 0,
   sliderThrottle: 0,
   brake: 0,
   steering: 0,
@@ -304,10 +309,11 @@ const state = {
   drsOpen: false,
   exploded: false,
   aeroActive: false,
+  forceSparks: false,
+  exhaustFlameTimer: 0,
   cameraMode: 'orbit',
   lightingMode: 'day',
-  // 預設模式 0: 針對 W14 LCD_124_208 做單純垂直翻正 (scale(1, -1))，解決上下顛倒且不產生左右鏡像！
-  lcdFlipMode: 0,
+  lcdFlipMode: 0, // 預設 0: 垂直翻正 scale(1, -1)，文字由左至右完全正向
   audioEnabled: false,
   isCustomGlbLoaded: false
 };
@@ -325,65 +331,7 @@ for (let i = 0; i < 15; i++) {
 }
 
 // ==========================================
-// 2. 動態繪製 Pirelli P-ZERO 輪胎側壁 CanvasTexture
-// ==========================================
-const tireCanvas = document.createElement('canvas');
-tireCanvas.width = 512;
-tireCanvas.height = 512;
-const tireCtx = tireCanvas.getContext('2d');
-const pirelliTireTexture = new THREE.CanvasTexture(tireCanvas);
-pirelliTireTexture.anisotropy = 4;
-
-function drawPirelliTireWall(compoundKey) {
-  const comp = TIRE_COMPOUNDS[compoundKey];
-  const ctx = tireCtx;
-  const cx = 256, cy = 256;
-
-  ctx.fillStyle = '#12151a';
-  ctx.fillRect(0, 0, 512, 512);
-
-  ctx.strokeStyle = '#1e232b';
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.arc(cx, cy, 220, 0, Math.PI * 2);
-  ctx.stroke();
-
-  ctx.strokeStyle = comp.cssColor;
-  ctx.lineWidth = 22;
-  ctx.lineCap = 'round';
-
-  ctx.beginPath();
-  ctx.arc(cx, cy, 178, -Math.PI * 0.38, Math.PI * 0.38);
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.arc(cx, cy, 178, Math.PI * 0.62, Math.PI * 1.38);
-  ctx.stroke();
-
-  ctx.save();
-  ctx.translate(cx, cy);
-  ctx.fillStyle = comp.cssColor;
-  ctx.font = 'italic 900 34px Arial, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('PIRELLI', 0, -165);
-
-  ctx.rotate(Math.PI);
-  ctx.fillText('P ZERO', 0, -165);
-  ctx.restore();
-
-  ctx.strokeStyle = '#2c3440';
-  ctx.lineWidth = 8;
-  ctx.beginPath();
-  ctx.arc(cx, cy, 128, 0, Math.PI * 2);
-  ctx.stroke();
-
-  pirelliTireTexture.needsUpdate = true;
-}
-
-drawPirelliTireWall('SOFT');
-
-// ==========================================
-// 3. Three.js 場景、無色偏純白攝影棚環境光 (100% 還原原檔車色)
+// 2. Three.js 場景、無色偏純白攝影棚環境光
 // ==========================================
 const container = document.getElementById('canvas-container');
 const scene = new THREE.Scene();
@@ -401,10 +349,9 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.15;
 container.appendChild(renderer.domElement);
 
-// 建立純中性色溫攝影棚環境貼圖 (移除所有青色/藍綠色偏，確保原檔黑銀碳纖維不變色)
 function createNeutralStudioEnvMap(isDay) {
   const envScene = new THREE.Scene();
-  envScene.background = new THREE.Color(isDay ? 0xe5e7eb : 0x111318);
+  envScene.background = new THREE.Color(isDay ? 0xe5e7eb : 0x0d1017);
 
   const topIntensity = isDay ? 0xffffff : 0x64748b;
   const sideIntensity = isDay ? 0xf3f4f6 : 0x475569;
@@ -455,7 +402,6 @@ controls.minDistance = 0.08;
 controls.maxDistance = 14;
 controls.target.set(0, 0.45, 0);
 
-// 純白中性展廳光源 (完全不染色)
 const hemiLight = new THREE.HemisphereLight(0xffffff, 0x475569, 1.35);
 scene.add(hemiLight);
 
@@ -488,7 +434,7 @@ floorMesh.receiveShadow = true;
 scene.add(floorMesh);
 
 // ==========================================
-// 4. 3D 方向盤動態液晶螢幕 (修正為垂直翻正 scale(-1, -1)，解除水平鏡像)
+// 3. 3D 方向盤動態液晶螢幕 (修正為垂直翻正 scale(1, -1))
 // ==========================================
 const dashCanvas = document.createElement('canvas');
 dashCanvas.width = 512;
@@ -506,8 +452,6 @@ function updateSteeringWheelScreen(now) {
   const ctx = dashCtx;
   ctx.save();
 
-  // 針對 W14 LCD_124_208 節點的正確座標轉換：
-  // 模式 0 (預設)：單純垂直翻轉 (scale(1, -1))，解決上下顛倒且文字由左至右完全正常！
   if (state.isCustomGlbLoaded) {
     if (state.lcdFlipMode === 0) {
       ctx.translate(0, 256);
@@ -528,7 +472,6 @@ function updateSteeringWheelScreen(now) {
   ctx.lineWidth = 4;
   ctx.strokeRect(4, 4, 504, 248);
 
-  // 1. 頂部 15 顆超轉燈
   const rpmRatio = (state.rpm - state.idleRpm) / (state.maxRpm - state.idleRpm);
   const activeLeds = Math.ceil(rpmRatio * 15);
   const flashBlue = state.rpm > 14200 && Math.floor(now / 55) % 2 === 0;
@@ -546,7 +489,6 @@ function updateSteeringWheelScreen(now) {
     externalLeds[i].style.backgroundColor = color;
   }
 
-  // 2. 中央大檔位數字与輪胎配方
   ctx.fillStyle = '#ffffff';
   ctx.font = 'bold 116px monospace';
   ctx.textAlign = 'center';
@@ -556,7 +498,6 @@ function updateSteeringWheelScreen(now) {
   ctx.font = 'bold 20px monospace';
   ctx.fillText(`${comp.engName} [GRIP ${Math.round(comp.gripFactor * 100)}%]`, 256, 192);
 
-  // 3. 左側：車速與 DRS
   ctx.textAlign = 'left';
   ctx.fillStyle = '#94a3b8';
   ctx.font = 'bold 18px monospace';
@@ -572,7 +513,6 @@ function updateSteeringWheelScreen(now) {
   ctx.font = 'bold 19px monospace';
   ctx.fillText(state.drsOpen ? 'DRS ON' : 'DRS OFF', 34, 156);
 
-  // 4. 右側：RPM 與 胎溫
   ctx.textAlign = 'right';
   ctx.fillStyle = '#94a3b8';
   ctx.font = 'bold 18px monospace';
@@ -586,7 +526,6 @@ function updateSteeringWheelScreen(now) {
   ctx.font = 'bold 20px monospace';
   ctx.fillText(`TYRE ${Math.round(state.tireTemps.fl)}°C`, 488, 156);
 
-  // 5. 底部 ERS 電量條
   ctx.fillStyle = '#1e293b';
   ctx.fillRect(24, 212, 464, 16);
   ctx.fillStyle = '#00f5d4';
@@ -597,7 +536,7 @@ function updateSteeringWheelScreen(now) {
 }
 
 // ==========================================
-// 5. 車體結構與 AMG W14 (.glb) 原生材質保留及 Z 軸方向盤綁定
+// 4. 車體結構、精緻胎肩色線與 Z 軸方向盤轉向樞紐
 // ==========================================
 const f1CarRoot = new THREE.Group();
 scene.add(f1CarRoot);
@@ -606,16 +545,22 @@ const bodyPaintMat = new THREE.MeshPhysicalMaterial({
   color: 0x181b20, roughness: 0.22, metalness: 0.35, clearcoat: 1.0, clearcoatRoughness: 0.08
 });
 bodyPaintMat.userData.originalColor = bodyPaintMat.color.clone();
+bodyPaintMat.userData.customBaseColor = bodyPaintMat.color.clone();
 
 const carbonMat = new THREE.MeshStandardMaterial({ color: 0x181b20, roughness: 0.4, metalness: 0.3 });
 carbonMat.userData.originalColor = carbonMat.color.clone();
+carbonMat.userData.customBaseColor = carbonMat.color.clone();
 
 const metallicMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.2, metalness: 0.85 });
-const tireRubberMat = new THREE.MeshStandardMaterial({ color: 0x15181e, roughness: 0.75, metalness: 0.05 });
-const tireStripe3DMat = new THREE.MeshBasicMaterial({ color: 0xff1801, side: THREE.DoubleSide });
-const tireWallCanvasMat = new THREE.MeshStandardMaterial({
-  map: pirelliTireTexture, roughness: 0.5, metalness: 0.1
+const tireRubberMat = new THREE.MeshStandardMaterial({ color: 0x121418, roughness: 0.82, metalness: 0.04 });
+
+// 關鍵修正：關閉 toneMapped (toneMapped: false)，讓倍耐力深正紅 (#c90016) 100% 原色呈現，絕不被 ACES Filmic 洗成橘色！
+const pirelliStripeMat = new THREE.MeshBasicMaterial({
+  color: 0xc90016,
+  side: THREE.DoubleSide,
+  toneMapped: false
 });
+
 const brakeGlowMat = new THREE.MeshStandardMaterial({
   color: 0x444444, roughness: 0.4, metalness: 0.6, emissive: 0xff3300, emissiveIntensity: 0.0
 });
@@ -636,30 +581,34 @@ const parts = {
   brakeMaterials: [brakeGlowMat],
   paintMaterials: [bodyPaintMat],
   allCarMaterials: [bodyPaintMat, carbonMat],
-  w14TireSideMeshes: []
+  w14TireSideMats: []
 };
 
-function attach3DTireCompoundRings(wheelGroup, halfWidth) {
-  const ringGroup = new THREE.Group();
-  [-halfWidth, halfWidth].forEach((xOffset, idx) => {
-    const wallDisc = new THREE.Mesh(
-      new THREE.RingGeometry(0.185, 0.332, 36),
-      tireWallCanvasMat
+// 只在輪胎胎肩外緣鑲嵌兩道極細、斷開式的真實倍耐力弧形色線 (不遮擋碳纖維輪圈蓋)
+function attachThinPirelliShoulderStripes(wheelGroup, halfWidth, radius = 0.272) {
+  const stripeHolder = new THREE.Group();
+  [-halfWidth, halfWidth].forEach((xOffset) => {
+    // 上下兩道 130 度極細圓弧線 (厚度僅 1.1cm)，中間留空符合真實倍耐力印刷比例
+    const arc1 = new THREE.Mesh(
+      new THREE.TorusGeometry(radius, 0.0055, 8, 40, Math.PI * 0.72),
+      pirelliStripeMat
     );
-    wallDisc.position.x = xOffset;
-    wallDisc.rotation.y = idx === 1 ? Math.PI / 2 : -Math.PI / 2;
+    arc1.position.x = xOffset;
+    arc1.rotation.y = Math.PI / 2;
+    arc1.rotation.z = 0.44;
 
-    const brightRing = new THREE.Mesh(
-      new THREE.RingGeometry(0.245, 0.272, 36),
-      tireStripe3DMat
+    const arc2 = new THREE.Mesh(
+      new THREE.TorusGeometry(radius, 0.0055, 8, 40, Math.PI * 0.72),
+      pirelliStripeMat
     );
-    brightRing.position.x = xOffset + (idx === 1 ? 0.002 : -0.002);
-    brightRing.rotation.y = idx === 1 ? Math.PI / 2 : -Math.PI / 2;
+    arc2.position.x = xOffset;
+    arc2.rotation.y = Math.PI / 2;
+    arc2.rotation.z = Math.PI + 0.44;
 
-    ringGroup.add(wallDisc, brightRing);
+    stripeHolder.add(arc1, arc2);
   });
-  wheelGroup.add(ringGroup);
-  parts.wheelSpinMeshes.push(ringGroup);
+  wheelGroup.add(stripeHolder);
+  parts.wheelSpinMeshes.push(stripeHolder);
 }
 
 function buildProceduralF1Proxy() {
@@ -721,8 +670,6 @@ function buildProceduralF1Proxy() {
   f1CarRoot.add(rw);
 
   sw.position.set(0, 0.56, 0.65);
-  sw.rotation.x = -0.28;
-  sw.userData.initialQuat = sw.quaternion.clone();
   const swBody = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.16, 0.025), carbonMat);
   const screenMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.18, 0.095), new THREE.MeshBasicMaterial({ map: dashTexture }));
   screenMesh.position.set(0, 0.01, 0.015);
@@ -735,22 +682,21 @@ function buildProceduralF1Proxy() {
     const tire = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.36, 32), tireRubberMat);
     tire.rotation.z = Math.PI / 2;
     tire.castShadow = true;
-    const spoke = new THREE.Mesh(new THREE.BoxGeometry(0.37, 0.34, 0.04), metallicMat);
-    spin.add(tire, spoke);
+    const wheelCover = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.364, 24), carbonMat);
+    wheelCover.rotation.z = Math.PI / 2;
+    spin.add(tire, wheelCover);
     parts.wheelSpinMeshes.push(spin);
 
     const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.06, 24), brakeGlowMat);
     disc.rotation.z = Math.PI / 2;
     holder.add(spin, disc);
-    attach3DTireCompoundRings(holder, 0.182);
+    attachThinPirelliShoulderStripes(holder, 0.181, 0.268);
     return holder;
   }
 
   fl.position.set(0.8, 0.36, 1.8);
-  fl.userData.initialQuat = fl.quaternion.clone();
   fl.add(createProxyWheel());
   fr.position.set(-0.8, 0.36, 1.8);
-  fr.userData.initialQuat = fr.quaternion.clone();
   fr.add(createProxyWheel());
   const rl = createProxyWheel();
   rl.position.set(0.78, 0.36, -1.8);
@@ -776,7 +722,7 @@ function buildProceduralF1Proxy() {
 buildProceduralF1Proxy();
 
 // ==========================================
-// 載入你的 AMG W14 (.glb)：100% 保留原檔材質參數，不強制改動
+// 5. 載入 AMG W14 (.glb)：建立獨立車體 Z 軸方向盤轉向樞紐，徹底解決 Y 軸搖擺問題
 // ==========================================
 function loadW14GlbFromUrl(url, fileNameLabel) {
   const overlay = document.getElementById('loading-overlay');
@@ -793,6 +739,7 @@ function loadW14GlbFromUrl(url, fileNameLabel) {
 
       f1CarRoot.clear();
       f1CarRoot.add(model);
+      model.updateMatrixWorld(true);
 
       parts.frontWingGroup = [];
       parts.engineCoverGroup = [];
@@ -803,7 +750,10 @@ function loadW14GlbFromUrl(url, fileNameLabel) {
       parts.brakeMaterials = [];
       parts.paintMaterials = [];
       parts.allCarMaterials = [];
-      parts.w14TireSideMeshes = [];
+      parts.w14TireSideMats = [];
+
+      let rawSteerNode = null;
+      let rawWheelFL = null, rawWheelFR = null, rawWheelRL = null, rawWheelRR = null;
 
       model.traverse((node) => {
         if (node.isMesh) {
@@ -812,7 +762,14 @@ function loadW14GlbFromUrl(url, fileNameLabel) {
           const mats = Array.isArray(node.material) ? node.material : [node.material];
           mats.forEach((mat) => {
             if (!mat) return;
-            // 關鍵：完全不修改原檔的 metalness 與 roughness，備份原檔原始顏色供日夜切換使用！
+            // 關鍵：對輪胎側壁材質另外處理，不放進 allCarMaterials 避免被日夜模式洗回原檔橘色
+            if (mat.name === 'TIRE_SIDES.001') {
+              if (!parts.w14TireSideMats.includes(mat)) {
+                parts.w14TireSideMats.push(mat);
+              }
+              return;
+            }
+
             if (!mat.userData.originalColor && mat.color) {
               mat.userData.originalColor = mat.color.clone();
               mat.userData.customBaseColor = mat.color.clone();
@@ -829,15 +786,11 @@ function loadW14GlbFromUrl(url, fileNameLabel) {
               mat.emissiveIntensity = 0;
               parts.brakeMaterials.push(mat);
             }
-            if (mat.name === 'TIRE_SIDES.001') {
-              parts.w14TireSideMeshes.push(node);
-            }
           });
         }
 
         const n = node.name;
         node.userData.origPos = node.position.clone();
-        node.userData.initialQuat = node.quaternion.clone();
 
         if (n.startsWith('frontwing_') || n.startsWith('frontspoiler_') || n.startsWith('frontflap_') || n.startsWith('nosecone')) {
           parts.frontWingGroup.push(node);
@@ -854,17 +807,17 @@ function loadW14GlbFromUrl(url, fileNameLabel) {
           parts.rearWingGroup.push(node);
         }
 
-        if (n === 'WHEEL_LF_38_69') parts.wheelSteerFL = node;
-        if (n === 'WHEEL_RF_62_102') parts.wheelSteerFR = node;
-        if (n === 'WHEEL_LR_82_134') parts.wheelRL = node;
-        if (n === 'WHEEL_RR_68_113') parts.wheelRR = node;
+        if (n === 'WHEEL_LF_38_69') rawWheelFL = node;
+        if (n === 'WHEEL_RF_62_102') rawWheelFR = node;
+        if (n === 'WHEEL_LR_82_134') rawWheelRL = node;
+        if (n === 'WHEEL_RR_68_113') rawWheelRR = node;
 
         if (n.startsWith('TYRE_') || n.startsWith('wheel_fl') || n.startsWith('wheel_fr') || n.startsWith('wheel_bl') || n.startsWith('wheel_br')) {
           parts.wheelSpinMeshes.push(node);
         }
 
         if (n === 'STEER_HR_148_167') {
-          parts.steeringPivot = node;
+          rawSteerNode = node;
         }
         if (n.startsWith('CHAR_')) node.visible = false;
         if (n === 'LCD_124_208') {
@@ -876,18 +829,59 @@ function loadW14GlbFromUrl(url, fileNameLabel) {
         }
       });
 
-      if (parts.wheelSteerFL) attach3DTireCompoundRings(parts.wheelSteerFL, 0.183);
-      if (parts.wheelSteerFR) attach3DTireCompoundRings(parts.wheelSteerFR, 0.183);
-      if (parts.wheelRL) attach3DTireCompoundRings(parts.wheelRL, 0.226);
-      if (parts.wheelRR) attach3DTireCompoundRings(parts.wheelRR, 0.226);
+      // 【關鍵工程修正】為方向盤 STEER_HR_148_167 建立對齊車體座標軸的轉向樞紐 (steeringColumnPivot)
+      // 因為原檔 STEER_HR_148_167 內含 90 度 X 軸翻轉矩陣，直接轉它會引發萬向鎖變成繞 Y 軸搖擺。
+      // 我們在車體空間計算方向盤真實幾何中心，建立零旋轉樞紐並用 .attach() 掛載，確保 .rotation.z 100% 繞著 Z 軸心旋轉！
+      if (rawSteerNode && rawSteerNode.parent) {
+        const box = new THREE.Box3().setFromObject(rawSteerNode);
+        const centerWorld = new THREE.Vector3();
+        box.getCenter(centerWorld);
+
+        const steerParent = rawSteerNode.parent;
+        const centerLocal = steerParent.worldToLocal(centerWorld.clone());
+
+        const cleanSteerPivot = new THREE.Group();
+        cleanSteerPivot.name = 'Clean_Z_Axis_Steer_Pivot';
+        cleanSteerPivot.position.copy(centerLocal);
+        // 對齊父節點 (車體空間：X左右、Y上下、Z前後縱深)
+        steerParent.add(cleanSteerPivot);
+        cleanSteerPivot.updateMatrixWorld(true);
+        cleanSteerPivot.attach(rawSteerNode);
+
+        parts.steeringPivot = cleanSteerPivot;
+      }
+
+      // 同樣為前輪建立對齊車體 Y 軸的乾淨轉向樞紐
+      function wrapWheelInCleanSteerPivot(wheelNode) {
+        if (!wheelNode || !wheelNode.parent) return wheelNode;
+        const parent = wheelNode.parent;
+        const cleanPivot = new THREE.Group();
+        cleanPivot.position.copy(wheelNode.position);
+        cleanPivot.userData.origPos = cleanPivot.position.clone();
+        parent.add(cleanPivot);
+        cleanPivot.updateMatrixWorld(true);
+        cleanPivot.attach(wheelNode);
+        return cleanPivot;
+      }
+
+      parts.wheelSteerFL = wrapWheelInCleanSteerPivot(rawWheelFL);
+      parts.wheelSteerFR = wrapWheelInCleanSteerPivot(rawWheelFR);
+      parts.wheelRL = rawWheelRL;
+      parts.wheelRR = rawWheelRR;
+
+      // 在四輪胎肩外緣鑲嵌極細倍耐力弧線 (不遮擋 W14 原生碳纖維輪圈蓋)
+      if (rawWheelFL) attachThinPirelliShoulderStripes(rawWheelFL, 0.176, 0.272);
+      if (rawWheelFR) attachThinPirelliShoulderStripes(rawWheelFR, 0.176, 0.272);
+      if (rawWheelRL) attachThinPirelliShoulderStripes(rawWheelRL, 0.218, 0.272);
+      if (rawWheelRR) attachThinPirelliShoulderStripes(rawWheelRR, 0.218, 0.272);
 
       state.isCustomGlbLoaded = true;
-      applyTireCompound(state.compound);
       setLightingMode(state.lightingMode);
+      applyTireCompound(state.compound);
 
       overlay.classList.add('hidden');
       overlay.classList.remove('flex');
-      document.getElementById('model-status').textContent = `✅ 已載入原檔：${fileNameLabel} (原色還原 + Z軸方向盤)`;
+      document.getElementById('model-status').textContent = `✅ 已載入：${fileNameLabel} (正紅細胎線 + Z軸方向盤 + 火花物理)`;
     },
     (xhr) => {
       if (xhr.total > 0) {
@@ -924,9 +918,20 @@ function applyTireCompound(compoundKey) {
   state.compound = compoundKey;
   const comp = TIRE_COMPOUNDS[compoundKey];
 
-  drawPirelliTireWall(compoundKey);
-  tireStripe3DMat.color.setHex(comp.colorHex);
+  // 1. 更新極細胎肩色帶 (toneMapped: false 確保正紅 #c90016 不變橘)
+  pirelliStripeMat.color.setHex(comp.colorHex);
 
+  // 2. 更新 W14 原生輪胎側壁材質 (轉換為 Linear 空間並關閉 emissive 過曝，解決紅胎變橘問題)
+  parts.w14TireSideMats.forEach(mat => {
+    mat.color.setHex(comp.colorHex).convertSRGBToLinear();
+    if (mat.emissive) {
+      mat.emissive.setHex(0x000000);
+      mat.emissiveIntensity = 0;
+    }
+    mat.needsUpdate = true;
+  });
+
+  // 3. 更新 UI 面板上的物理數據提示與徽章
   const maxPossibleSpeed = baseGearSpeeds[8] + 16 + comp.topSpeedBonus;
   document.getElementById('tire-spec-hint').textContent = `極速 ${maxPossibleSpeed} / 抓地 ${Math.round(comp.gripFactor * 100)}%`;
   document.getElementById('tire-spec-hint').style.color = comp.cssColor;
@@ -947,7 +952,6 @@ document.querySelectorAll('.tire-btn').forEach(btn => {
   });
 });
 
-// 日夜切換：白天 100% 採用原檔顏色，晚上以原檔為基準乘以 0.58 壓暗
 function setLightingMode(mode) {
   state.lightingMode = mode;
   document.getElementById('btn-env-day').classList.toggle('active-btn', mode === 'day');
@@ -969,7 +973,6 @@ function setLightingMode(mode) {
     floorMat.roughness = 0.45;
     floorMat.metalness = 0.1;
 
-    // 白天：100% 還原原檔顏色與反射強度
     parts.allCarMaterials.forEach(mat => {
       if (mat.color && mat.userData.customBaseColor) {
         mat.color.copy(mat.userData.customBaseColor);
@@ -978,22 +981,21 @@ function setLightingMode(mode) {
       mat.needsUpdate = true;
     });
   } else {
-    scene.background = new THREE.Color(0x090c12);
-    scene.fog = new THREE.FogExp2(0x090c12, 0.025);
+    scene.background = new THREE.Color(0x070a0f);
+    scene.fog = new THREE.FogExp2(0x070a0f, 0.025);
     scene.environment = nightEnvMap;
 
-    hemiLight.intensity = 0.7;
-    dirLight.intensity = 1.25;
+    hemiLight.intensity = 0.68;
+    dirLight.intensity = 1.2;
     frontFillLight.intensity = 0.65;
     cockpitLight.intensity = 0.9;
     backRimLight.intensity = 0.8;
     renderer.toneMappingExposure = 0.95;
 
-    floorMat.color.setHex(0x0c1017);
+    floorMat.color.setHex(0x0a0e14);
     floorMat.roughness = 0.25;
     floorMat.metalness = 0.5;
 
-    // 夜間：以原檔顏色為基礎等比壓暗 (0.58x)
     parts.allCarMaterials.forEach(mat => {
       if (mat.color && mat.userData.customBaseColor) {
         mat.color.copy(mat.userData.customBaseColor).multiplyScalar(0.58);
@@ -1022,7 +1024,148 @@ document.querySelectorAll('.paint-btn').forEach(btn => {
 });
 
 // ==========================================
-// 7. 爆炸視角與 3D 空間拉線標籤
+// 7. Formula Addict 極限視覺：鈦合金底板火花物理 (InstancedMesh) + 排氣尾管回火藍焰
+// ==========================================
+const SPARK_COUNT = 180;
+const sparkGeo = new THREE.BoxGeometry(0.007, 0.007, 0.24);
+const sparkMat = new THREE.MeshBasicMaterial({
+  color: 0xffb703,
+  transparent: true,
+  opacity: 0.95,
+  blending: THREE.AdditiveBlending,
+  toneMapped: false
+});
+const sparkInstanced = new THREE.InstancedMesh(sparkGeo, sparkMat, SPARK_COUNT);
+sparkInstanced.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+scene.add(sparkInstanced);
+
+const sparkData = [];
+const dummySpark = new THREE.Object3D();
+for (let i = 0; i < SPARK_COUNT; i++) {
+  sparkData.push({
+    active: false,
+    pos: new THREE.Vector3(0, -10, 0),
+    vel: new THREE.Vector3(),
+    life: 0,
+    maxLife: 0.3
+  });
+  dummySpark.position.set(0, -10, 0);
+  dummySpark.updateMatrix();
+  sparkInstanced.setMatrixAt(i, dummySpark.matrix);
+}
+
+// 車尾中央排氣管回火雙層火焰錐 (Exhaust Overrun Flame Cone)
+const exhaustFlameGroup = new THREE.Group();
+// W14 排氣尾管位置約在 (0, 0.52, -2.05)
+exhaustFlameGroup.position.set(0, 0.52, -2.02);
+scene.add(exhaustFlameGroup);
+
+const outerFlameMat = new THREE.MeshBasicMaterial({
+  color: 0x38bdf8, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false
+});
+const innerFlameMat = new THREE.MeshBasicMaterial({
+  color: 0xfbbf24, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false
+});
+const outerFlameCone = new THREE.Mesh(new THREE.ConeGeometry(0.065, 0.55, 16), outerFlameMat);
+outerFlameCone.rotation.x = -Math.PI / 2;
+outerFlameCone.position.z = -0.27;
+
+const innerFlameCone = new THREE.Mesh(new THREE.ConeGeometry(0.038, 0.35, 12), innerFlameMat);
+innerFlameCone.rotation.x = -Math.PI / 2;
+innerFlameCone.position.z = -0.17;
+
+const exhaustPointLight = new THREE.PointLight(0x38bdf8, 0, 3.5);
+exhaustPointLight.position.set(0, 0, -0.35);
+
+exhaustFlameGroup.add(outerFlameCone, innerFlameCone, exhaustPointLight);
+exhaustFlameGroup.visible = false;
+
+function triggerExhaustBackfire() {
+  state.exhaustFlameTimer = 0.14; // 閃爍 140ms
+  triggerAudioExhaustPop();
+}
+
+function updateSparksAndExhaustFlame(delta) {
+  // 觸發條件：時速 > 260 km/h 且未開 DRS (下壓力將底板壓至 < 14mm)，或手動開啟強制火花測試
+  const shouldEmitSparks = state.forceSparks || (state.speed > 260 && !state.drsOpen);
+  const carSpeedMps = Math.max(45, state.speed / 3.6);
+
+  for (let i = 0; i < SPARK_COUNT; i++) {
+    const s = sparkData[i];
+    if (!s.active) {
+      if (shouldEmitSparks && Math.random() < 0.45) {
+        s.active = true;
+        s.life = 0;
+        s.maxLife = 0.16 + Math.random() * 0.22;
+        // 從車底前段茶盤 (T-Tray) 與後段擴散器鈦合金防磨塊噴出
+        const isFrontSkid = Math.random() < 0.4;
+        s.pos.set(
+          (Math.random() - 0.5) * 0.35,
+          0.012,
+          isFrontSkid ? 0.35 : -1.15
+        );
+        s.vel.set(
+          (Math.random() - 0.5) * 4.2,
+          0.8 + Math.random() * 2.6,
+          -(carSpeedMps * 0.55 + Math.random() * 12)
+        );
+      } else {
+        dummySpark.position.set(0, -10, 0);
+        dummySpark.scale.set(0.001, 0.001, 0.001);
+        dummySpark.updateMatrix();
+        sparkInstanced.setMatrixAt(i, dummySpark.matrix);
+        continue;
+      }
+    }
+
+    s.life += delta;
+    if (s.life >= s.maxLife) {
+      s.active = false;
+      dummySpark.position.set(0, -10, 0);
+      dummySpark.updateMatrix();
+      sparkInstanced.setMatrixAt(i, dummySpark.matrix);
+      continue;
+    }
+
+    // 重力與賽道地面反彈物理
+    s.vel.y -= 14.0 * delta;
+    s.pos.addScaledVector(s.vel, delta);
+    if (s.pos.y < 0.004) {
+      s.pos.y = 0.004;
+      s.vel.y = Math.abs(s.vel.y) * 0.65;
+      s.vel.x += (Math.random() - 0.5) * 2.0;
+    }
+
+    dummySpark.position.copy(s.pos);
+    const lifeRatio = 1.0 - s.life / s.maxLife;
+    dummySpark.scale.set(lifeRatio, lifeRatio, 0.6 + lifeRatio * 1.4);
+    dummySpark.lookAt(s.pos.clone().add(s.vel));
+    dummySpark.updateMatrix();
+    sparkInstanced.setMatrixAt(i, dummySpark.matrix);
+  }
+  sparkInstanced.instanceMatrix.needsUpdate = true;
+
+  // 更新排氣尾管回火藍焰動畫
+  if (state.exhaustFlameTimer > 0) {
+    state.exhaustFlameTimer -= delta;
+    exhaustFlameGroup.visible = true;
+    const flicker = 0.7 + Math.random() * 0.6;
+    exhaustFlameGroup.scale.set(flicker, flicker, 0.8 + Math.random() * 0.7);
+    exhaustPointLight.intensity = 3.5 * flicker;
+  } else {
+    exhaustFlameGroup.visible = false;
+    exhaustPointLight.intensity = 0;
+  }
+}
+
+document.getElementById('btn-sparks-force').addEventListener('click', (e) => {
+  state.forceSparks = !state.forceSparks;
+  e.currentTarget.classList.toggle('active-btn', state.forceSparks);
+  document.getElementById('state-sparks').textContent = state.forceSparks ? '強制開啟' : '自動(>260)';
+});
+
+// ==========================================
+// 8. 爆炸視角與 3D 空間拉線標籤
 // ==========================================
 const explodeConfig = [
   { getGroup: () => parts.frontWingGroup, offset: new THREE.Vector3(0, 0.08, 0.95), title: '前鼻翼與碳纖鼻錐總成', desc: 'Nodes: frontwing_fl/fr + nosecone' },
@@ -1099,7 +1242,7 @@ function updateExplodeAndCallouts(delta) {
 }
 
 // ==========================================
-// 8. 風洞空氣動力學流線模擬
+// 9. 風洞空氣動力學流線模擬
 // ==========================================
 const aeroGroup = new THREE.Group();
 aeroGroup.visible = false;
@@ -1140,20 +1283,20 @@ function updateAeroStreamlines(delta) {
 }
 
 // ==========================================
-// 9. V6 渦輪混合動力「多諧波 + 排氣脈衝 + 破音失真」聲浪合成器
+// 10. 2026 F1 動力單元聲學合成引擎 (傅立葉 PeriodicWave + 三段排氣管 Formant 共振 + 350kW MGU-K)
 // ==========================================
 let audioCtx = null;
-let oscSub = null, oscFund = null, oscFifth = null, oscOct = null, oscTurbo = null;
-let exhaustFilter = null, noiseFilter = null, masterGain = null, turboGain = null;
+let v6Osc1 = null, v6Osc2 = null, subOsc = null, mgukOsc = null;
+let dynamicCutoffFilter = null, noiseFilter = null, masterGain = null, mgukGain = null;
 
-function makeDistortionCurve(amount) {
-  const k = typeof amount === 'number' ? amount : 50;
-  const n_samples = 44100;
-  const curve = new Float32Array(n_samples);
-  const deg = Math.PI / 180;
-  for (let i = 0; i < n_samples; ++i) {
-    const x = (i * 2) / n_samples - 1;
-    curve[i] = ((3 + k) * x * 20 * deg) / (Math.PI + k * Math.abs(x));
+function makeExhaustSaturationCurve(amount) {
+  const k = amount || 90;
+  const n = 44100;
+  const curve = new Float32Array(n);
+  for (let i = 0; i < n; ++i) {
+    const x = (i * 2) / n - 1;
+    // 非對稱排氣壓力波軟削波 (Asymmetric Tube Clipping)
+    curve[i] = Math.tanh(x * (1 + k / 25)) * 0.9;
   }
   return curve;
 }
@@ -1163,49 +1306,79 @@ function initAudioEngine() {
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
   masterGain = audioCtx.createGain();
-  masterGain.gain.value = 0.28;
+  masterGain.gain.value = 0.30;
   masterGain.connect(audioCtx.destination);
 
+  // 1. 建立 16 階傅立葉係數之 V6 四衝程不對稱點火脈衝波 (PeriodicWave)
+  const real = new Float32Array(17);
+  const imag = new Float32Array(17);
+  // 賦予 V6 90度夾角特有的奇偶次諧波權重，消除單調電子蜂鳴感
+  const weights = [0, 1.0, 0.78, 0.85, 0.52, 0.40, 0.62, 0.28, 0.22, 0.35, 0.18, 0.14, 0.20, 0.10, 0.08, 0.12, 0.06];
+  for (let i = 1; i <= 16; i++) {
+    real[i] = weights[i] * Math.cos(i * 0.35);
+    imag[i] = weights[i] * Math.sin(i * 0.35);
+  }
+  const v6Wave = audioCtx.createPeriodicWave(real, imag, { disableNormalization: false });
+
+  // 2. 三段排氣歧管與渦輪腔固定共振峰濾波器 (Acoustic Formant Filters)
+  const formant1 = audioCtx.createBiquadFilter(); // 250Hz 尾管低吼駐波
+  formant1.type = 'peaking';
+  formant1.frequency.value = 250;
+  formant1.Q.value = 1.8;
+  formant1.gain.value = 7.0;
+
+  const formant2 = audioCtx.createBiquadFilter(); // 760Hz 渦輪排氣殼體共鳴
+  formant2.type = 'peaking';
+  formant2.frequency.value = 760;
+  formant2.Q.value = 2.4;
+  formant2.gain.value = 6.5;
+
+  const formant3 = audioCtx.createBiquadFilter(); // 2150Hz 高轉金屬撕裂共鳴
+  formant3.type = 'peaking';
+  formant3.frequency.value = 2150;
+  formant3.Q.value = 2.8;
+  formant3.gain.value = 5.5;
+
+  dynamicCutoffFilter = audioCtx.createBiquadFilter();
+  dynamicCutoffFilter.type = 'lowpass';
+  dynamicCutoffFilter.frequency.value = 1100;
+  dynamicCutoffFilter.Q.value = 1.4;
+
   const shaper = audioCtx.createWaveShaper();
-  shaper.curve = makeDistortionCurve(130);
+  shaper.curve = makeExhaustSaturationCurve(85);
   shaper.oversample = '4x';
 
-  exhaustFilter = audioCtx.createBiquadFilter();
-  exhaustFilter.type = 'lowpass';
-  exhaustFilter.frequency.value = 750;
-  exhaustFilter.Q.value = 2.8;
+  // 串聯聲學管路：V6 雙振盪器 -> 飽和失真 -> 三段共振峰 -> 動態閥門低通 -> 主輸出
+  shaper.connect(formant1);
+  formant1.connect(formant2);
+  formant2.connect(formant3);
+  formant3.connect(dynamicCutoffFilter);
+  dynamicCutoffFilter.connect(masterGain);
 
-  shaper.connect(exhaustFilter);
-  exhaustFilter.connect(masterGain);
+  v6Osc1 = audioCtx.createOscillator();
+  v6Osc1.setPeriodicWave(v6Wave);
+  const g1 = audioCtx.createGain();
+  g1.gain.value = 0.55;
+  v6Osc1.connect(g1);
+  g1.connect(shaper);
 
-  oscSub = audioCtx.createOscillator();
-  oscSub.type = 'triangle';
+  // 第二軌微失諧振盪器 (模擬左右兩列氣缸排氣干涉深度)
+  v6Osc2 = audioCtx.createOscillator();
+  v6Osc2.setPeriodicWave(v6Wave);
+  const g2 = audioCtx.createGain();
+  g2.gain.value = 0.42;
+  v6Osc2.connect(g2);
+  g2.connect(shaper);
+
+  // 次低頻曲軸箱震動 (0.5x Sub-bass)
+  subOsc = audioCtx.createOscillator();
+  subOsc.type = 'sawtooth';
   const gSub = audioCtx.createGain();
-  gSub.gain.value = 0.35;
-  oscSub.connect(gSub);
+  gSub.gain.value = 0.28;
+  subOsc.connect(gSub);
   gSub.connect(shaper);
 
-  oscFund = audioCtx.createOscillator();
-  oscFund.type = 'sawtooth';
-  const gFund = audioCtx.createGain();
-  gFund.gain.value = 0.55;
-  oscFund.connect(gFund);
-  gFund.connect(shaper);
-
-  oscFifth = audioCtx.createOscillator();
-  oscFifth.type = 'square';
-  const gFifth = audioCtx.createGain();
-  gFifth.gain.value = 0.25;
-  oscFifth.connect(gFifth);
-  gFifth.connect(shaper);
-
-  oscOct = audioCtx.createOscillator();
-  oscOct.type = 'sawtooth';
-  const gOct = audioCtx.createGain();
-  gOct.gain.value = 0.3;
-  oscOct.connect(gOct);
-  gOct.connect(shaper);
-
+  // 3. 高壓廢氣流速噪音 (Pink Noise Exhaust Rush)
   const bufferSize = audioCtx.sampleRate * 2;
   const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
   const output = noiseBuffer.getChannelData(0);
@@ -1227,67 +1400,97 @@ function initAudioEngine() {
 
   noiseFilter = audioCtx.createBiquadFilter();
   noiseFilter.type = 'bandpass';
-  noiseFilter.frequency.value = 500;
-  noiseFilter.Q.value = 1.8;
+  noiseFilter.frequency.value = 600;
+  noiseFilter.Q.value = 1.5;
 
   const noiseGain = audioCtx.createGain();
-  noiseGain.gain.value = 0.38;
+  noiseGain.gain.value = 0.35;
   noiseSource.connect(noiseFilter);
   noiseFilter.connect(noiseGain);
   noiseGain.connect(masterGain);
 
-  oscTurbo = audioCtx.createOscillator();
-  oscTurbo.type = 'sine';
-  turboGain = audioCtx.createGain();
-  turboGain.gain.value = 0.03;
-  oscTurbo.connect(turboGain);
-  turboGain.connect(masterGain);
+  // 4. 2026 F1 350kW (475hp) MGU-K 磁阻電動馬達高頻齒輪嘯叫
+  mgukOsc = audioCtx.createOscillator();
+  mgukOsc.type = 'triangle';
+  mgukGain = audioCtx.createGain();
+  mgukGain.gain.value = 0.02;
+  mgukOsc.connect(mgukGain);
+  mgukGain.connect(masterGain);
 
-  oscSub.start();
-  oscFund.start();
-  oscFifth.start();
-  oscOct.start();
+  v6Osc1.start();
+  v6Osc2.start();
+  subOsc.start();
   noiseSource.start();
-  oscTurbo.start();
+  mgukOsc.start();
 
   state.audioEnabled = true;
   const btn = document.getElementById('btn-audio');
-  btn.textContent = '🔊 V6 諧波聲浪運行中 (點擊靜音)';
+  btn.textContent = '🔊 2026 V6 + 350kW 聲浪運行中';
   btn.classList.add('active-btn');
+}
+
+// 觸發排氣管回火爆震音 (Overrun Crackle & Pop)
+function triggerAudioExhaustPop() {
+  if (!state.audioEnabled || !audioCtx) return;
+  const now = audioCtx.currentTime;
+
+  // 產生 2~3 聲短促的排氣二次燃燒爆裂脈衝
+  for (let i = 0; i < 3; i++) {
+    const delay = i * (0.035 + Math.random() * 0.03);
+    const popOsc = audioCtx.createOscillator();
+    const popGain = audioCtx.createGain();
+    popOsc.type = 'sawtooth';
+    popOsc.frequency.setValueAtTime(135 + Math.random() * 60, now + delay);
+    popOsc.frequency.exponentialRampToValueAtTime(38, now + delay + 0.045);
+
+    popGain.gain.setValueAtTime(0.26, now + delay);
+    popGain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.05);
+
+    popOsc.connect(popGain);
+    popGain.connect(masterGain);
+    popOsc.start(now + delay);
+    popOsc.stop(now + delay + 0.055);
+  }
 }
 
 function triggerGearShiftCut() {
   if (!state.audioEnabled || !masterGain) return;
   const now = audioCtx.currentTime;
   masterGain.gain.cancelScheduledValues(now);
-  masterGain.gain.setValueAtTime(0.01, now);
-  masterGain.gain.exponentialRampToValueAtTime(0.34, now + 0.045);
-  masterGain.gain.setTargetAtTime(0.28, now + 0.06, 0.04);
+  masterGain.gain.setValueAtTime(0.015, now);
+  masterGain.gain.exponentialRampToValueAtTime(0.35, now + 0.045);
+  masterGain.gain.setTargetAtTime(0.30, now + 0.06, 0.04);
+  if (state.rpm > 10500) {
+    state.exhaustFlameTimer = 0.09;
+  }
 }
 
 function updateEngineAudio() {
   if (!state.audioEnabled || !audioCtx) return;
   const now = audioCtx.currentTime;
 
-  const idleLope = state.rpm < 4800 ? Math.sin(now * 28) * 6 : 0;
-  const f0 = (state.rpm / 24) + idleLope;
+  // V6 四衝程真實點火基頻 f0 = RPM / 20 (4,000 RPM = 200Hz, 15,000 RPM = 750Hz)
+  const idleJitter = state.rpm < 4600 ? Math.sin(now * 34) * 5.5 : (Math.random() - 0.5) * 3.0;
+  const f0 = (state.rpm / 20) + idleJitter;
 
-  oscSub.frequency.setTargetAtTime(f0 * 0.5, now, 0.02);
-  oscFund.frequency.setTargetAtTime(f0, now, 0.02);
-  oscFifth.frequency.setTargetAtTime(f0 * 1.5, now, 0.02);
-  oscOct.frequency.setTargetAtTime(f0 * 3.0, now, 0.02);
+  v6Osc1.frequency.setTargetAtTime(f0, now, 0.018);
+  v6Osc2.frequency.setTargetAtTime(f0 * 1.007, now, 0.022);
+  subOsc.frequency.setTargetAtTime(f0 * 0.5, now, 0.02);
 
-  const filterFreq = f0 * 2.8 + state.throttle * 2600;
-  exhaustFilter.frequency.setTargetAtTime(filterFreq, now, 0.03);
-  noiseFilter.frequency.setTargetAtTime(300 + (state.rpm / 15000) * 1800, now, 0.03);
+  // 隨油門深度與轉速開啟排氣低通濾波，釋放 2150Hz 金屬撕裂高頻
+  const cutoff = 520 + (state.rpm / 15000) * 2400 + state.throttle * 2200;
+  dynamicCutoffFilter.frequency.setTargetAtTime(cutoff, now, 0.025);
+  noiseFilter.frequency.setTargetAtTime(350 + (state.rpm / 15000) * 1900, now, 0.03);
 
-  const turboFreq = 1400 + (state.rpm / 15000) * 2800;
-  oscTurbo.frequency.setTargetAtTime(turboFreq, now, 0.04);
-  turboGain.gain.setTargetAtTime(0.015 + (state.throttle + state.brake) * 0.025, now, 0.04);
+  // 2026 350kW MGU-K 馬達嘯叫 (在踩油門加速與重煞車動能回收時顯著增強)
+  const mgukFreq = 980 + (state.rpm / 15000) * 2450;
+  mgukOsc.frequency.setTargetAtTime(mgukFreq, now, 0.03);
+  const hybridLoad = Math.max(state.throttle * 0.042, state.brake * 0.055);
+  mgukGain.gain.setTargetAtTime(0.012 + hybridLoad, now, 0.035);
 }
 
 // ==========================================
-// 10. 鍵盤與 UI 控制綁定
+// 11. 鍵盤與 UI 控制綁定
 // ==========================================
 document.getElementById('btn-flip-lcd').addEventListener('click', () => {
   state.lcdFlipMode = (state.lcdFlipMode + 1) % 4;
@@ -1306,6 +1509,7 @@ function shiftDown() {
     state.gear--;
     state.rpm = Math.min(state.maxRpm, state.rpm * 1.22);
     triggerGearShiftCut();
+    if (state.rpm > 10000) triggerExhaustBackfire();
   }
 }
 
@@ -1326,7 +1530,11 @@ window.addEventListener('keydown', (e) => {
 });
 
 window.addEventListener('keyup', (e) => {
-  if (e.code === 'KeyW' || e.code === 'ArrowUp') keys.w = false;
+  if (e.code === 'KeyW' || e.code === 'ArrowUp') {
+    keys.w = false;
+    // 高轉速鬆開 W 鍵收油門時，立即觸發排氣尾管回火藍焰與爆震聲
+    if (state.rpm > 10500) triggerExhaustBackfire();
+  }
   if (e.code === 'KeyS' || e.code === 'ArrowDown') keys.s = false;
   if (e.code === 'KeyA' || e.code === 'ArrowLeft') keys.a = false;
   if (e.code === 'KeyD' || e.code === 'ArrowRight') keys.d = false;
@@ -1334,7 +1542,11 @@ window.addEventListener('keyup', (e) => {
 
 const sliderThrottle = document.getElementById('slider-throttle');
 sliderThrottle.addEventListener('input', (e) => {
-  state.sliderThrottle = Number(e.target.value) / 100;
+  const newVal = Number(e.target.value) / 100;
+  if (state.sliderThrottle - newVal > 0.25 && state.rpm > 10500) {
+    triggerExhaustBackfire();
+  }
+  state.sliderThrottle = newVal;
   if (state.sliderThrottle > 0 && state.gear === 0) state.gear = 1;
 });
 
@@ -1380,8 +1592,8 @@ function setCameraMode(mode) {
   } else if (mode === 'rear') {
     document.getElementById('btn-cam-rear').classList.add('active-btn');
     extHud.style.opacity = '1';
-    camera.position.set(-1.5, 1.15, -3.1);
-    controls.target.set(0, 0.75, -1.9);
+    camera.position.set(-1.5, 0.85, -3.2);
+    controls.target.set(0, 0.45, -1.7);
     controls.minDistance = 0.4;
     controls.maxDistance = 14;
   } else {
@@ -1435,18 +1647,15 @@ document.getElementById('btn-audio').addEventListener('click', () => {
     initAudioEngine();
   } else {
     state.audioEnabled = !state.audioEnabled;
-    masterGain.gain.value = state.audioEnabled ? 0.28 : 0;
+    masterGain.gain.value = state.audioEnabled ? 0.30 : 0;
     document.getElementById('btn-audio').classList.toggle('active-btn', state.audioEnabled);
   }
 });
 
 // ==========================================
-// 11. 主渲染與物理遙測迴圈 (含四元數 Z 軸方向盤旋轉修正)
+// 12. 主渲染與物理遙測迴圈
 // ==========================================
 const clock = new THREE.Clock();
-const localZAxis = new THREE.Vector3(0, 0, 1);
-const worldYAxis = new THREE.Vector3(0, 1, 0);
-const steerQuat = new THREE.Quaternion();
 
 function getTireBorderColor(temp) {
   if (temp < 85) return '#38bdf8';
@@ -1460,6 +1669,7 @@ function updatePowertrainState(delta) {
   const targetThrottle = keys.w ? 1.0 : state.sliderThrottle;
   const targetBrake = (keys.s || keys.mouseBrake) ? 1.0 : 0.0;
 
+  state.prevThrottle = state.throttle;
   state.throttle = THREE.MathUtils.lerp(state.throttle, targetThrottle, delta * 8);
   state.brake = THREE.MathUtils.lerp(state.brake, targetBrake, delta * 10);
 
@@ -1485,7 +1695,7 @@ function updatePowertrainState(delta) {
 
     if (state.brake > 0.05) {
       state.speed = Math.max(0, state.speed - state.brake * 98 * comp.brakeEfficiency * delta);
-      state.ers = Math.min(100, state.ers + delta * 7.0 * state.brake);
+      state.ers = Math.min(100, state.ers + delta * 7.5 * state.brake);
       if (state.speed > 40) {
         state.brakeTemp = Math.min(1050, state.brakeTemp + delta * 650 * state.brake);
       }
@@ -1531,23 +1741,12 @@ function updatePowertrainState(delta) {
   });
   gridHelper.position.z = (gridHelper.position.z - linearSpeedMps * delta) % 0.5;
 
-  // 5. 前輪轉向與方向盤「嚴格繞 Z 軸心旋轉」
-  // 因為 W14 的 STEER_HR_148_167 初始矩陣把本地 Y 軸與 Z 軸做了約 90 度置換，
-  // 透過在初始四元數 (initialQuat) 右乘本地 Y 軸四元數 (對應世界空間的轉向柱 Z 軸縱深)，
-  // 即可讓方向盤完美呈現像真實賽車一樣繞著轉向柱中心軸 (Z軸平面) 旋轉！
+  // 5. 前輪轉向 (Y軸) 與方向盤轉向 (對齊車體空間後，直接操作 cleanSteerPivot.rotation.z 即可 100% 繞著 Z 軸心旋轉！)
   const maxSteerAngle = 0.40;
-  if (parts.wheelSteerFL && parts.wheelSteerFL.userData.initialQuat) {
-    steerQuat.setFromAxisAngle(worldYAxis, state.steering * maxSteerAngle);
-    parts.wheelSteerFL.quaternion.copy(parts.wheelSteerFL.userData.initialQuat).premultiply(steerQuat);
-  }
-  if (parts.wheelSteerFR && parts.wheelSteerFR.userData.initialQuat) {
-    steerQuat.setFromAxisAngle(worldYAxis, state.steering * maxSteerAngle);
-    parts.wheelSteerFR.quaternion.copy(parts.wheelSteerFR.userData.initialQuat).premultiply(steerQuat);
-  }
-  if (parts.steeringPivot && parts.steeringPivot.userData.initialQuat) {
-    // 在車手視角平面 (XY平面) 繞著 Z 軸縱深軸心旋轉
-    steerQuat.setFromAxisAngle(localZAxis, -state.steering * 1.35);
-    parts.steeringPivot.quaternion.copy(parts.steeringPivot.userData.initialQuat).premultiply(steerQuat);
+  if (parts.wheelSteerFL) parts.wheelSteerFL.rotation.y = state.steering * maxSteerAngle;
+  if (parts.wheelSteerFR) parts.wheelSteerFR.rotation.y = state.steering * maxSteerAngle;
+  if (parts.steeringPivot) {
+    parts.steeringPivot.rotation.z = -state.steering * 1.35;
   }
 
   if (parts.drsFlap) {
@@ -1585,6 +1784,7 @@ function animate(now) {
 
   updatePowertrainState(delta);
   updateSteeringWheelScreen(now);
+  updateSparksAndExhaustFlame(delta);
   updateExplodeAndCallouts(delta);
   updateAeroStreamlines(delta);
   updateEngineAudio();
